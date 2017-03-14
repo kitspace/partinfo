@@ -1,5 +1,6 @@
 const expressGraphql = require('express-graphql')
 const express        = require('express')
+const cors           = require('cors')
 
 const {store}         = require('./actions')
 const schema          = require('./schema')
@@ -30,6 +31,7 @@ app.use((req, res, next) =>  {
     return next()
 })
 
+app.options('/graphql', cors())
 app.use('/graphql', expressGraphql((req) =>  {
   return {
     schema,
