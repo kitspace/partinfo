@@ -33,13 +33,18 @@ const schema = `
   }
 
   type Offer {
-    sku: Sku
-    prices: Prices
+    sku         : Sku
+    prices      : Prices
+    image       : Image
+    description : String
+    specs       : [Spec]
   }
 
   type Prices {
     USD: [[Float]]
     EUR: [[Float]]
+    GBP: [[Float]]
+    SGD: [[Float]]
   }
 
   type Image {
@@ -86,10 +91,6 @@ function run(query) {
     })
     actions.addQuery(time_stamped)
   })
-}
-
-function hash(obj) {
-  return String(immutable.Map(obj).hashCode())
 }
 
 module.exports = graphqlTools.makeExecutableSchema({
