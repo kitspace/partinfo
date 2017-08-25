@@ -58,7 +58,6 @@ function resolveCached(queries) {
 
 function requestNew(queries) {
   queries = queries.map(q => q.get('query'))
-  console.log('requestNew', queries.toJS())
   octopart(queries).then(farnell).then(results => {
     cache(results)
     results.forEach((v, k) => {

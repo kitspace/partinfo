@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "CPAL-1.0",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node --stack_trace_limit=0 src/server.js",
     "test": "mocha",
     "test:i": "mocha --timeout 15000 integration/"
   },
@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "graphql-tester": "^0.0.5",
+    "memwatch-next": "^0.3.0",
     "mocha": "^3.2.0"
   }
 }

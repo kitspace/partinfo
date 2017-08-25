@@ -1,11 +1,23 @@
 const expressGraphql = require('express-graphql')
 const express        = require('express')
 const cors           = require('cors')
+const memwatch = require('memwatch-next')
 
 const schema = require('./schema')
 const config = require('../config')
 
 require('./handle_changes')
+
+const hd = new memwatch.HeapDiff()
+let leak = 0
+memwatch.on('leak', info => {
+  console.log('leak', ++leak)
+  if (leak > 4) {
+    const log = {info}
+    log.diff = hd.end()
+    console.log(JSON.stringify(log, null, 2))
+  }
+})
 
 const app = express()
 

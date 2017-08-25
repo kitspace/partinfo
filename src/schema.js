@@ -89,7 +89,6 @@ function makeId() {
 }
 
 function run(query) {
-  console.log(query)
   const id = makeId()
   query.id = id
   query = immutable.fromJS(query)
