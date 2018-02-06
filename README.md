@@ -1,6 +1,6 @@
-# Kitnic Partinfo [![Build Status](https://travis-ci.org/monostable/kitnic-partinfo.svg?branch=master)](https://travis-ci.org/monostable/kitnic-partinfo)
+# Kitspace Partinfo [![Build Status](https://travis-ci.org/monostable/kitnic-partinfo.svg?branch=master)](https://travis-ci.org/monostable/kitnic-partinfo)
 
-A microservice to get information on electronic components. This is used on [kitnic.it](https://kitnic.it) to get the part information for the BOM popups.
+A microservice to get information on electronic components. This is used on [kitspace.org](https://kitspace.org) to get the part information for the BOM popups.
 
 ![Popup screenshot](popup.png)
 
