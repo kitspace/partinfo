@@ -65,7 +65,7 @@ const schema = `
 const resolverMap = {
   Query: {
     part(_, {mpn, sku}) {
-      if (! (mpn || sku)) {
+      if (!(mpn || sku)) {
         return Error('Mpn or Sku required')
       }
       if (sku && sku.vendor !== 'Digikey') {
@@ -74,12 +74,12 @@ const resolverMap = {
       return run({mpn, sku})
     },
     search(_, {term}) {
-      if (! term) {
+      if (!term) {
         return []
       }
       return run({term})
     },
-  }
+  },
 }
 
 function makeId() {
@@ -109,6 +109,6 @@ function run(query) {
 }
 
 module.exports = graphqlTools.makeExecutableSchema({
-    typeDefs: schema,
-    resolvers: resolverMap,
+  typeDefs: schema,
+  resolvers: resolverMap,
 })

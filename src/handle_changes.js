@@ -15,7 +15,6 @@ const CACHE_TIMEOUT_MS = 24 * 60 * 60 * 1000 //milliseconds
 
 const redisClient = redis.createClient()
 
-
 setInterval(checkRequests, 1000)
 request_bus.on('request', checkRequests)
 
@@ -28,9 +27,9 @@ function checkRequests(r) {
     requests = queries
     const now = Date.now()
     const timed_out = requests.reduce((timed_out, query) => {
-      return timed_out || ((now - query.get('time')) > QUERY_MAX_WAIT_MS)
+      return timed_out || now - query.get('time') > QUERY_MAX_WAIT_MS
     }, false)
-    if ((requests.size >= QUERY_BATCH_SIZE) || timed_out) {
+    if (requests.size >= QUERY_BATCH_SIZE || timed_out) {
       requestNew(requests.slice(0, QUERY_BATCH_SIZE))
       requests = requests.slice(QUERY_BATCH_SIZE)
     }
@@ -38,18 +37,19 @@ function checkRequests(r) {
 }
 
 function resolveCached(queries) {
-  const uncached = queries.map(q => (
-    new Promise((resolve, reject) => {
-      const key = queryToKey(q.get('query'))
-      redisClient.get(key, (err, response) => {
-        if (response) {
-          response_bus.emit(q.getIn(['query', 'id']), fromRedis(response))
-          return resolve(null)
-        }
-        return resolve(q)
+  const uncached = queries.map(
+    q =>
+      new Promise((resolve, reject) => {
+        const key = queryToKey(q.get('query'))
+        redisClient.get(key, (err, response) => {
+          if (response) {
+            response_bus.emit(q.getIn(['query', 'id']), fromRedis(response))
+            return resolve(null)
+          }
+          return resolve(q)
+        })
       })
-    })
-  ))
+  )
   return Promise.all(uncached).then(qs => {
     qs = qs.filter(q => q)
     return immutable.List(qs)
@@ -59,12 +59,14 @@ function resolveCached(queries) {
 function requestNew(queries) {
   queries = queries.map(q => q.get('query'))
   console.log('requestNew', queries.toJS())
-  octopart(queries).then(results => {
-    cache(results)
-    results.forEach((v, k) => {
-      response_bus.emit(k.get('id'), v)
+  octopart(queries)
+    .then(results => {
+      cache(results)
+      results.forEach((v, k) => {
+        response_bus.emit(k.get('id'), v)
+      })
     })
-  }).catch(e => console.error(e))
+    .catch(e => console.error(e))
 }
 
 function cache(responses) {
