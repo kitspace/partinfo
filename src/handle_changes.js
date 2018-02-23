@@ -78,7 +78,7 @@ function cache(responses) {
 }
 
 function toRedis(response) {
-  return JSON.stringify(response.toJS())
+  return JSON.stringify(response)
 }
 
 function fromRedis(redis_response) {

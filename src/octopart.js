@@ -42,7 +42,7 @@ function octopart(queries) {
     )
     .query({
       apikey,
-      queries: JSON.stringify(octopart_queries.toJS()),
+      queries: JSON.stringify(octopart_queries),
     })
     .set('Accept', 'application/json')
     .then(res => {
