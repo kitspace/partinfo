@@ -4,6 +4,7 @@ const {flatten, unflatten} = require('flat')
 
 const octopart = require('./octopart')
 const runRetailers = require('./retailers')
+const checkCPL = require('./check_cpl')
 
 const {request_bus, response_bus} = require('./message_bus')
 
@@ -59,6 +60,7 @@ function resolveCached(queries) {
 function requestNew(queries) {
   queries = queries.map(q => q.get('query'))
   console.log('requestNew', queries.toJS())
+  queries = checkCPL(queries)
   octopart(queries)
     .then(results => {
       cache(results)

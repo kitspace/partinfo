@@ -15,22 +15,27 @@ const retailer_reverse_map = retailer_map.mapEntries(([k, v]) => [v, k])
 const retailers_used = immutable.Set.fromKeys(retailer_map)
 
 function transform(queries) {
-  return queries.map(q => {
-    const ret = {limit: 1}
-    if (q.get('mpn')) {
-      ret.mpn = q.getIn(['mpn', 'part'])
-      //octopart has some issue with the slash
-      ret.brand = q.getIn(['mpn', 'manufacturer']).replace(' / ', ' ')
-    } else if (q.get('sku')) {
-      ret.sku = q.getIn(['sku', 'part'])
-      ret.seller = retailer_reverse_map.get(q.getIn(['sku', 'vendor']))
-    } else if (q.get('term')) {
-      ret.q = q.get('term')
-      ret.limit = 20
-    }
-    ret.reference = String(q.hashCode())
-    return ret
-  })
+  return flatten(
+    queries.map(q => {
+      const ret = {limit: 1}
+      if (q.get('mpn')) {
+        ret.mpn = q.getIn(['mpn', 'part'])
+        //octopart has some issue with the slash
+        ret.brand = q.getIn(['mpn', 'manufacturer']).replace(' / ', ' ')
+      } else if (q.get('sku')) {
+        ret.sku = q.getIn(['sku', 'part'])
+        ret.seller = retailer_reverse_map.get(q.getIn(['sku', 'vendor']))
+      } else if (q.get('term')) {
+        ret.q = q.get('term')
+        ret.limit = 20
+      } else if (q.get('multi')) {
+        const reference = String(q.hashCode())
+        return transform(q.get('multi')).map(x => Object.assign(x, {reference}))
+      }
+      ret.reference = String(q.hashCode())
+      return ret
+    })
+  )
 }
 
 function octopart(queries) {
@@ -51,17 +56,26 @@ function octopart(queries) {
       }
       const results = res.body.results
       return queries.reduce((returns, query) => {
-        const empty = query.get('term') ? immutable.List() : immutable.Map()
+        const empty = query.get('term')
+          ? immutable.List()
+          : query.get('multi') ? immutable.List() : immutable.Map()
         const query_id = String(query.hashCode())
-        const result = results.find(r => r.reference === query_id)
-        if (result == null) {
+        let result = results.filter(r => r.reference === query_id)
+        if (result.length === 0) {
           return returns.set(query, empty)
         }
-        if (result.items.length === 0) {
+        if (!query.get('multi')) {
+          result = result[0]
+        } else {
+          result = result.reduce((p, r) =>
+            Object.assign(p, {items: p.items.concat(r.items)})
+          )
+        }
+        if (result == null || result.items.length === 0) {
           return returns.set(query, empty)
         }
         let response
-        if (query.get('term')) {
+        if (query.get('term') || query.get('multi')) {
           response = immutable.List(result.items.map(i => toPart(query, i)))
         } else {
           response = toPart(query, result.items[0])
@@ -177,6 +191,15 @@ function mergeOffers(offers) {
     }
     return offers.add(offer)
   }, immutable.Set())
+}
+
+function flatten(l) {
+  return l.reduce((p, x) => {
+    if (immutable.List.isList(x)) {
+      return p.concat(flatten(x))
+    }
+    return p.push(x)
+  }, immutable.List())
 }
 
 module.exports = octopart
