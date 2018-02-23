@@ -12,10 +12,8 @@ function checkCPL(queries) {
     const term = query.get('term')
     if (term != null) {
       const c = electroGrammar.parse(term)
-      // pass through hole and electrolytics on to octopart for now
-      if (c.type === 'capacitor' && (/electro/i.test(term) || /pol/i.test(term))) {
-        return query
-      } else if ((c.type === 'resistor' || c.type === 'led') && /thr/i.test(term)) {
+      // pass it to octopart if we don't have a package size
+      if (c.size == null) {
         return query
       }
       const ids = electroGrammar.matchCPL(c)
