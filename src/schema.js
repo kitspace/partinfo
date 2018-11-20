@@ -34,12 +34,14 @@ const schema = `
   }
 
   type Offer {
-    sku         : Sku
-    prices      : Prices
-    image       : Image
-    description : String
-    specs       : [Spec]
-    stock_info  : [Spec]
+    sku               : Sku
+    prices            : Prices
+    image             : Image
+    description       : String
+    specs             : [Spec]
+    stock_info        : [Spec]
+    in_stock_quantity : Int
+    moq               : Int
   }
 
   type Prices {

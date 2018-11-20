@@ -174,6 +174,8 @@ function offers(item) {
           vendor,
         },
         prices: offer.prices,
+        in_stock_quantity: offer.in_stock_quantity,
+        moq: offer.moq,
       })
     })
   return mergeOffers(offers)
