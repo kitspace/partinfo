@@ -1,6 +1,6 @@
 const immutable = require('immutable')
 const url = require('url')
-const fetch = require('isomorphic-fetch')
+const superagent = require('superagent')
 const {ELEMENT14_API_KEY} = require('../config')
 
 function element14(name, sku) {
@@ -19,13 +19,11 @@ function element14(name, sku) {
     throw Error(`Only Newark and Farnell supported, got ${name}`)
   }
   const url = `https://api.element14.com/catalog/products?callInfo.responseDataFormat=json&term=id%3A${sku}&storeInfo.id=${site}&callInfo.apiKey=${ELEMENT14_API_KEY}&resultsSettings.responseGroup=inventory`
-  return fetch(url)
-    .then(r => r.json())
+  return superagent
+    .get(url)
+    .set('accept', 'application/json')
     .then(r => {
-      const p = ((r.premierFarnellPartNumberReturn || {}).products || [])[0]
-      if (!p) {
-        return immutable.Map()
-      }
+      const p = r.body.premierFarnellPartNumberReturn.products[0]
       return immutable.fromJS({
         in_stock_quantity: p.stock.level,
         stock_location:
