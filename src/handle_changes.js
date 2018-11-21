@@ -43,6 +43,9 @@ function resolveCached(queries) {
       new Promise((resolve, reject) => {
         const key = queryToKey(q.get('query'))
         redisClient.get(key, (err, response) => {
+          if (err) {
+            console.error(err)
+          }
           if (response) {
             response_bus.emit(q.getIn(['query', 'id']), fromRedis(response))
             return resolve(null)
@@ -89,7 +92,7 @@ function fromRedis(redis_response) {
 }
 
 function queryToKey(query) {
-  return query.filter((_, k) => k !== 'id').hashCode()
+  return query.filter((_, k) => k !== 'id' && k !== 'multi').hashCode()
 }
 
 module.exports = {}

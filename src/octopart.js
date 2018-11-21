@@ -28,7 +28,8 @@ function transform(queries) {
       } else if (q.get('term')) {
         ret.q = q.get('term')
         ret.limit = 20
-      } else if (q.get('multi')) {
+      }
+      if (q.get('multi')) {
         const reference = String(q.hashCode())
         return transform(q.get('multi')).map(x => Object.assign(x, {reference}))
       }
@@ -56,9 +57,7 @@ function octopart(queries) {
       }
       const results = res.body.results
       return queries.reduce((returns, query) => {
-        const empty = query.get('term')
-          ? immutable.List()
-          : query.get('multi') ? immutable.List() : immutable.Map()
+        const empty = query.get('term') ? immutable.List() : immutable.Map()
         const query_id = String(query.hashCode())
         let result = results.filter(r => r.reference === query_id)
         if (result.length === 0) {
@@ -75,12 +74,12 @@ function octopart(queries) {
           return returns.set(query, empty)
         }
         let response
-        if (query.get('term') || query.get('multi')) {
+        if (query.get('term')) {
           response = immutable.List(
             result.items.map(i =>
               toPart(query, i).set(
                 'type',
-                query.get('term') ? 'search' : 'match'
+                query.get('multi') ? 'match' : 'search'
               )
             )
           )

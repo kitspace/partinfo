@@ -36,7 +36,7 @@ function checkCPL(queries) {
         .reduce((p, r) => p.concat(r.partNumbers), [])
         .map(mpn => ({mpn}))
       if (mpns.length > 0) {
-        return query.remove('term').set('multi', immutable.fromJS(mpns))
+        return query.set('multi', immutable.fromJS(mpns))
       }
     }
     return query
