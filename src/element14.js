@@ -19,19 +19,23 @@ function element14(name, sku) {
     throw Error(`Only Newark and Farnell supported, got ${name}`)
   }
   const url = `https://api.element14.com/catalog/products?callInfo.responseDataFormat=json&term=id%3A${sku}&storeInfo.id=${site}&callInfo.apiKey=${ELEMENT14_API_KEY}&resultsSettings.responseGroup=inventory`
-  console.log({url})
   return fetch(url)
     .then(r => r.json())
     .then(r => {
-      const stockedOutsideOfCountry = r.premierFarnellPartNumberReturn.products.reduce(
-        (prev, prod) => prev && prod.nationalClassCode === 'F',
-        true
-      )
+      const p = ((r.premierFarnellPartNumberReturn || {}).products || [])[0]
+      if (!p) {
+        return immutable.Map()
+      }
       return immutable.fromJS({
-        stock_location: stockedOutsideOfCountry ? extendedLocation : location,
+        in_stock_quantity: p.stock.level,
+        stock_location:
+          p.nationalClassCode === 'F' ? extendedLocation : location,
       })
     })
-
+    .catch(e => {
+      console.error(e)
+      return immutable.Map()
+    })
 }
 
 module.exports = element14
