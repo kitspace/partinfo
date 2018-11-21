@@ -39,8 +39,8 @@ const schema = `
     image             : Image
     description       : String
     specs             : [Spec]
-    stock_info        : [Spec]
     in_stock_quantity : Int
+    stock_location    : String
     moq               : Int
   }
 

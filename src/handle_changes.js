@@ -62,6 +62,7 @@ function requestNew(queries) {
   console.log('requestNew', queries.toJS())
   queries = checkCPL(queries)
   octopart(queries)
+    .then(runRetailers)
     .then(results => {
       cache(results)
       results.forEach((v, k) => {
