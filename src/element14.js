@@ -32,7 +32,12 @@ function element14(name, sku) {
       })
     })
     .catch(e => {
-      console.error(e)
+      console.error(
+        'Error in Element14 API:',
+        e.status,
+        e.response.text,
+        e.response.req.path
+      )
       return immutable.Map()
     })
 }
