@@ -326,6 +326,11 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
 
+function-rate-limit@^1.0.1:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/function-rate-limit/-/function-rate-limit-1.1.0.tgz#eccdf1af918fc959eb6509058603e462e37fd683"
+  integrity sha1-7M3xr5GPyVnrZQkFhgPkYuN/1oM=
+
 generate-function@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/generate-function/-/generate-function-2.0.0.tgz#6858fe7c0969b7d4e9093337647ac79f60dfbe74"
@@ -727,6 +732,13 @@ prettier@^1.10.2:
 process-nextick-args@~1.0.6:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-1.0.7.tgz#150e20b756590ad3f91093f25a4f2ad8bff30ba3"
+
+promise-rate-limit@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/promise-rate-limit/-/promise-rate-limit-0.0.1.tgz#98fec7d214f7d92f93297b7c175794664faffb4d"
+  integrity sha1-mP7H0hT32S+TKXt8F1eUZk+v+00=
+  dependencies:
+    function-rate-limit "^1.0.1"
 
 proxy-addr@~1.1.3:
   version "1.1.3"

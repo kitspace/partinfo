@@ -16,6 +16,7 @@
     "graphql": "^0.9.1",
     "graphql-tools": "^0.10.0",
     "immutable": "^3.8.1",
+    "promise-rate-limit": "^0.0.1",
     "redis": "^2.8.0",
     "redux": "^3.6.0",
     "superagent": "^3.4.3"

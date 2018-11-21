@@ -1,6 +1,7 @@
 const immutable = require('immutable')
 const url = require('url')
 const superagent = require('superagent')
+const rateLimit = require('promise-rate-limit')
 const {ELEMENT14_API_KEY} = require('../config')
 
 function element14(name, sku) {
@@ -36,4 +37,4 @@ function element14(name, sku) {
     })
 }
 
-module.exports = element14
+module.exports = rateLimit(3, 1000, element14)
