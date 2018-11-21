@@ -31,6 +31,7 @@ const schema = `
      description : String
      offers      : [Offer]
      specs       : [Spec]
+     type        : String
   }
 
   type Offer {

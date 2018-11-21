@@ -76,9 +76,16 @@ function octopart(queries) {
         }
         let response
         if (query.get('term') || query.get('multi')) {
-          response = immutable.List(result.items.map(i => toPart(query, i)))
+          response = immutable.List(
+            result.items.map(i =>
+              toPart(query, i).set(
+                'type',
+                query.get('term') ? 'search' : 'match'
+              )
+            )
+          )
         } else {
-          response = toPart(query, result.items[0])
+          response = toPart(query, result.items[0]).set('type', 'match')
         }
         return returns.set(query, response)
       }, immutable.Map())
