@@ -72,7 +72,7 @@ function octopart(queries) {
         if (result.length === 0) {
           return returns.set(query, empty)
         }
-        if (!query.get('common_parts_matches')) {
+        if (!query.get('term')) {
           result = result[0]
         } else {
           result = result.reduce((p, r) => {
