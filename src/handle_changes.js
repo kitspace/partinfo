@@ -92,7 +92,7 @@ function fromRedis(redis_response) {
 }
 
 function queryToKey(query) {
-  return query.filter((_, k) => k !== 'id' && k !== 'multi').hashCode()
+  return query.filter((_, k) => k !== 'id' && k !== 'common_parts_matches').hashCode()
 }
 
 module.exports = {}

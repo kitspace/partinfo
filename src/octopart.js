@@ -29,9 +29,9 @@ function transform(queries) {
         ret.q = q.get('term')
         ret.limit = 20
       }
-      if (q.get('multi')) {
+      if (q.get('common_parts_matches')) {
         const reference = String(q.hashCode())
-        return transform(q.get('multi')).map(x => Object.assign(x, {reference}))
+        return transform(q.get('common_parts_matches')).map(x => Object.assign(x, {reference}))
       }
       ret.reference = String(q.hashCode())
       return ret
@@ -63,7 +63,7 @@ function octopart(queries) {
         if (result.length === 0) {
           return returns.set(query, empty)
         }
-        if (!query.get('multi')) {
+        if (!query.get('common_parts_matches')) {
           result = result[0]
         } else {
           result = result.reduce((p, r) =>
@@ -79,7 +79,7 @@ function octopart(queries) {
             result.items.map(i =>
               toPart(query, i).set(
                 'type',
-                query.get('multi') ? 'match' : 'search'
+                query.get('common_parts_matches') ? 'match' : 'search'
               )
             )
           )
