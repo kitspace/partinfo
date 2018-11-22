@@ -1,11 +1,11 @@
 {
-  "name": "kitnic-partinfo",
+  "name": "kitspace-partinfo",
   "version": "1.0.0",
   "license": "CPAL-1.0",
   "scripts": {
     "start": "node src/server.js",
     "test": "npm run test:integration",
-    "test:integration": "mocha --timeout 15000 integration/"
+    "test:integration": "mocha --timeout 30000 integration/"
   },
   "dependencies": {
     "cors": "^2.8.1",
