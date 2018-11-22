@@ -18,22 +18,31 @@ function transform(queries) {
   return flatten(
     queries.map(q => {
       const ret = {limit: 1}
+      let type
       if (q.get('mpn')) {
+        type = 'match:'
         ret.mpn = q.getIn(['mpn', 'part'])
         //octopart has some issue with the slash
         ret.brand = q.getIn(['mpn', 'manufacturer']).replace(' / ', ' ')
       } else if (q.get('sku')) {
+        type = 'match:'
         ret.sku = q.getIn(['sku', 'part'])
         ret.seller = retailer_reverse_map.get(q.getIn(['sku', 'vendor']))
       } else if (q.get('term')) {
+        type = 'search:'
         ret.q = q.get('term')
-        ret.limit = 20
+        ret.limit = 5
       }
       if (q.get('common_parts_matches')) {
         const reference = String(q.hashCode())
-        return transform(q.get('common_parts_matches')).map(x => Object.assign(x, {reference}))
+        ret.reference = 'search:' + reference
+        return immutable.List.of(ret).concat(
+          transform(q.get('common_parts_matches')).map(x =>
+            Object.assign(x, {reference: 'match:' + reference})
+          )
+        )
       }
-      ret.reference = String(q.hashCode())
+      ret.reference = type + String(q.hashCode())
       return ret
     })
   )
@@ -59,16 +68,22 @@ function octopart(queries) {
       return queries.reduce((returns, query) => {
         const empty = query.get('term') ? immutable.List() : immutable.Map()
         const query_id = String(query.hashCode())
-        let result = results.filter(r => r.reference === query_id)
+        let result = results.filter(r => r.reference.split(':')[1] === query_id)
         if (result.length === 0) {
           return returns.set(query, empty)
         }
         if (!query.get('common_parts_matches')) {
           result = result[0]
         } else {
-          result = result.reduce((p, r) =>
-            Object.assign(p, {items: p.items.concat(r.items)})
-          )
+          result = result.reduce((p, r) => {
+            return Object.assign(p, {
+              items: p.items.concat(
+                r.items.map(i => {
+                  return Object.assign(i, {type: r.reference.split(':')[0]})
+                })
+              ),
+            })
+          }, {items:[]})
         }
         if (result == null || result.items.length === 0) {
           return returns.set(query, empty)
@@ -76,12 +91,7 @@ function octopart(queries) {
         let response
         if (query.get('term')) {
           response = immutable.List(
-            result.items.map(i =>
-              toPart(query, i).set(
-                'type',
-                query.get('common_parts_matches') ? 'match' : 'search'
-              )
-            )
+            result.items.map(i => toPart(query, i).set('type', i.type))
           )
         } else {
           response = toPart(query, result.items[0]).set('type', 'match')
