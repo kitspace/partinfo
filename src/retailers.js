@@ -2,7 +2,8 @@ const immutable = require('immutable')
 
 const retailers = {
   Farnell: require('./farnell'),
-  Newark: require('./newark'),
+  //disabled for now until we can optimize
+  //Newark: require('./newark'),
 }
 
 const not_yet = immutable.List.of('Digikey', 'Mouser', 'RS')
