@@ -31,7 +31,7 @@ function transform(queries) {
       } else if (q.get('term')) {
         type = 'search:'
         ret.q = q.get('term')
-        ret.limit = 5
+        ret.limit = 20
       }
       if (q.get('common_parts_matches')) {
         const reference = String(q.hashCode())
