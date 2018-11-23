@@ -56,7 +56,9 @@ function runRetailer(name, offers) {
         offer.mergeDeep(o)
       )
     )
-  ).then(immutable.List)
+  )
+    .then(offers => offers.filter(o => o.get('no_longer_stocked') !== true))
+    .then(immutable.List)
 }
 
 module.exports = runRetailers

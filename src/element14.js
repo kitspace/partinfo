@@ -32,12 +32,22 @@ function element14(name, sku) {
       })
     })
     .catch(e => {
-      console.error(
-        'Error in Element14 API:',
-        e.status,
-        e.response.text,
-        e.response.req.path
-      )
+      if (e && e.response && e.response.text) {
+        try {
+          const x = JSON.parse(e.response.text)
+          if (x.Fault.Detail.searchException.exceptionCode === '200003') {
+            return immutable.Map({
+              no_longer_stocked: true,
+            })
+          } else {
+            console.error(e)
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      } else {
+        console.error(e)
+      }
       return immutable.Map()
     })
 }
