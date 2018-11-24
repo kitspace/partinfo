@@ -143,6 +143,29 @@ describe('from Sku', () => {
       })
     })
   })
+  it("doesn't return offers without the requested sku in it", () => {
+    const vendor = 'Farnell'
+    const part = '1220424'
+    return test(`{
+       part(sku:{vendor: "${vendor}", part:"${part}"}) {
+         offers {
+           sku {
+             vendor
+             part
+           }
+         }
+       }
+    }`).then(response => {
+      assert(response.success, 'response failed')
+      assert(response.status === 200, 'status is not 200')
+      if (response.data.part != null) {
+        const returned_sku = response.data.part.offers.reduce((prev, o) => {
+          return prev || (o.vendor === vendor && o.part === part)
+        }, false)
+        assert(returned_sku, "didn't return sku")
+      }
+    })
+  })
 })
 
 describe('search', () => {

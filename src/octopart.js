@@ -75,15 +75,18 @@ function octopart(queries) {
         if (!query.get('term')) {
           result = result[0]
         } else {
-          result = result.reduce((p, r) => {
-            return Object.assign(p, {
-              items: p.items.concat(
-                r.items.map(i => {
-                  return Object.assign(i, {type: r.reference.split(':')[0]})
-                })
-              ),
-            })
-          }, {items:[]})
+          result = result.reduce(
+            (p, r) => {
+              return Object.assign(p, {
+                items: p.items.concat(
+                  r.items.map(i => {
+                    return Object.assign(i, {type: r.reference.split(':')[0]})
+                  })
+                ),
+              })
+            },
+            {items: []}
+          )
         }
         if (result == null || result.items.length === 0) {
           return returns.set(query, empty)
@@ -95,6 +98,17 @@ function octopart(queries) {
           )
         } else {
           response = toPart(query, result.items[0]).set('type', 'match')
+          const query_sku = query.get('sku')
+          if (query_sku) {
+            // make sure the queried sku is actually in the offers, else octopart
+            // is bullshitting us
+            const contains_sku = response
+              .get('offers')
+              .some(offer => offer.get('sku').equals(query_sku))
+            if (!contains_sku) {
+              return returns.set(query, empty)
+            }
+          }
         }
         return returns.set(query, response)
       }, immutable.Map())
