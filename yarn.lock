@@ -208,9 +208,9 @@ ee-first@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
 
-"electro-grammar@https://github.com/monostable/electro-grammar":
+"electro-grammar@git+https://github.com/kitspace/electro-grammar#ignore-footprint-prefix":
   version "1.0.0"
-  resolved "https://github.com/monostable/electro-grammar#bc9208a8d64dc668a94c7476d67aa6654f7a192d"
+  resolved "git+https://github.com/kitspace/electro-grammar#20d045a1fac665377e08a357b52050f5ee89b1f0"
   dependencies:
     nearley "https://github.com/Hardmath123/nearley"
 
