@@ -19,8 +19,11 @@ const schema = `
   type Sku ${Sku}
   input SkuInput ${Sku}
 
+  input MpnOrSku {mpn: MpnInput, sku: SkuInput}
+
   type Query {
     part(mpn: MpnInput, sku: SkuInput): Part
+    match(parts: [MpnOrSku]!) : [Part]!
     search(term: String!): [Part]!
   }
 
@@ -68,13 +71,10 @@ const schema = `
 const resolverMap = {
   Query: {
     part(_, {mpn, sku}) {
-      if (!(mpn || sku)) {
-        return Error('Mpn or Sku required')
-      }
-      if (sku && sku.vendor !== 'Digikey') {
-        sku.part = sku.part.replace(/-/g, '')
-      }
-      return run({mpn, sku})
+      return runPart({mpn, sku})
+    },
+    match(_, {parts}) {
+      return Promise.all(parts.map(runPart))
     },
     search(_, {term}) {
       if (!term) {
@@ -83,6 +83,16 @@ const resolverMap = {
       return run({term})
     },
   },
+}
+
+function runPart({mpn, sku}) {
+  if (!(mpn || sku)) {
+    return Promise.reject(Error('Mpn or Sku required'))
+  }
+  if (sku && sku.vendor !== 'Digikey') {
+    sku.part = sku.part.replace(/-/g, '')
+  }
+  return run({mpn, sku})
 }
 
 function makeId() {
