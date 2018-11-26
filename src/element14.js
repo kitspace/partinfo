@@ -25,7 +25,12 @@ function element14(name, sku) {
     .set('accept', 'application/json')
     .then(r => {
       const p = r.body.premierFarnellPartNumberReturn.products[0]
+      const mpn = {
+        manufacturer: p.brandName,
+        part: p.translatedManufacturerPartNumber,
+      }
       return immutable.fromJS({
+        mpn,
         in_stock_quantity: p.stock.level,
         stock_location:
           p.nationalClassCode === 'F' ? extendedLocation : location,

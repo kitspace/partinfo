@@ -12,6 +12,19 @@ function runRetailers(results) {
   return Promise.all(
     results
       .map((result, query) => {
+        const query_sku = query.get('sku')
+        if (query_sku) {
+          const offers = result.get('offers') || immutable.List()
+          const contains_sku = offers.some(offer =>
+            offer.get('sku').equals(query_sku)
+          )
+          if (!contains_sku) {
+            result = result.set(
+              'offers',
+              offers.push(immutable.Map({sku: query_sku}))
+            )
+          }
+        }
         let promise
         if (immutable.List.isList(result)) {
           promise = Promise.all(result.map(run)).then(immutable.List)
@@ -40,13 +53,14 @@ function run(part) {
       return runRetailer(name, this_offers)
     })
   ).then(newOffers => {
-    return part.set(
-      'offers',
-      immutable
-        .List(newOffers)
-        .flatten(1)
-        .concat(not_yet_offers)
-    )
+    newOffers = immutable.List(newOffers).flatten(1)
+    if (!part.get('mpn')) {
+      const withMpn = newOffers.find(x => x.get('mpn'))
+      if (withMpn) {
+        part = part.set('mpn', withMpn.get('mpn'))
+      }
+    }
+    return part.set('offers', newOffers.concat(not_yet_offers))
   })
 }
 
