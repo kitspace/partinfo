@@ -1,6 +1,7 @@
 const superagent = require('superagent')
 const immutable = require('immutable')
 const apikey = require('../config').OCTOPART_API_KEY
+const rateLimit = require('promise-rate-limit')
 
 const retailer_map = immutable.OrderedMap({
   'Digi-Key': 'Digikey',
@@ -234,4 +235,4 @@ function flatten(l) {
   }, immutable.List())
 }
 
-module.exports = octopart
+module.exports = rateLimit(3, 1000, octopart)

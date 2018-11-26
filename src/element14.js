@@ -47,7 +47,7 @@ function element14(name, sku) {
           } else {
             console.error(e)
           }
-        } catch (e) {
+        } catch (e2) {
           console.error(e)
         }
       } else {
@@ -57,4 +57,4 @@ function element14(name, sku) {
     })
 }
 
-module.exports = rateLimit(3, 1000, element14)
+module.exports = rateLimit(2, 1000, element14)
