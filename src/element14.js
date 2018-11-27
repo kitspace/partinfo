@@ -2,7 +2,9 @@ const immutable = require('immutable')
 const url = require('url')
 const superagent = require('superagent')
 const rateLimit = require('promise-rate-limit')
-const {ELEMENT14_API_KEY} = require('../config')
+const {ELEMENT14_API_KEYS} = require('../config')
+
+let key_select = 0
 
 function element14(name, sku) {
   let site, currency, location, extendedLocation
@@ -19,7 +21,9 @@ function element14(name, sku) {
   } else {
     throw Error(`Only Newark and Farnell supported, got ${name}`)
   }
-  const url = `https://api.element14.com/catalog/products?callInfo.responseDataFormat=json&term=id%3A${sku}&storeInfo.id=${site}&callInfo.apiKey=${ELEMENT14_API_KEY}&resultsSettings.responseGroup=inventory`
+  const api_key = ELEMENT14_API_KEYS[key_select]
+  key_select = (key_select + 1) % ELEMENT14_API_KEYS.length
+  const url = `https://api.element14.com/catalog/products?callInfo.responseDataFormat=json&term=id%3A${sku}&storeInfo.id=${site}&callInfo.apiKey=${api_key}&resultsSettings.responseGroup=inventory`
   return superagent
     .get(url)
     .set('accept', 'application/json')
