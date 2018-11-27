@@ -49,8 +49,7 @@ function transform(queries) {
   )
 }
 
-function octopart(queries) {
-  const octopart_queries = transform(queries)
+const run = rateLimit(3, 1000, function(octopart_queries) {
   return superagent
     .get('https://octopart.com/api/v3/parts/match')
     .query(
@@ -61,12 +60,25 @@ function octopart(queries) {
       queries: JSON.stringify(octopart_queries),
     })
     .set('Accept', 'application/json')
-    .then(res => {
-      if (res.status !== 200) {
-        console.error(res.status, queries)
-      }
-      const results = res.body.results
-      return queries.reduce((returns, query) => {
+})
+
+function octopart(queries) {
+  const octopart_queries = transform(queries)
+  const groups = splitIntoChunks(octopart_queries, 20)
+  return Promise.all(groups.toArray().map(run))
+    .then(responses =>
+      responses.reduce((prev, res) => {
+        if (res.status !== 200) {
+          console.error(res.status, queries)
+        }
+        if (!res.body || !res.body.results) {
+          return prev
+        }
+        return prev.concat(res.body.results)
+      }, [])
+    )
+    .then(results =>
+      queries.reduce((returns, query) => {
         const empty = query.get('term') ? immutable.List() : immutable.Map()
         const query_id = String(query.hashCode())
         let result = results.filter(r => r.reference.split(':')[1] === query_id)
@@ -113,7 +125,7 @@ function octopart(queries) {
         }
         return returns.set(query, response)
       }, immutable.Map())
-    })
+    )
     .catch(err => console.error(err))
 }
 
@@ -235,4 +247,10 @@ function flatten(l) {
   }, immutable.List())
 }
 
-module.exports = rateLimit(3, 1000, octopart)
+function splitIntoChunks(list, chunkSize = 1) {
+  return immutable
+    .Range(0, list.count(), chunkSize)
+    .map(chunkStart => list.slice(chunkStart, chunkStart + chunkSize))
+}
+
+module.exports = octopart

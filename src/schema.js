@@ -86,6 +86,10 @@ const resolverMap = {
 }
 
 function runPart({mpn, sku}) {
+  console.log(
+    `got request for ${(mpn && JSON.stringify(mpn)) ||
+      (sku && JSON.stringify(sku))}`
+  )
   if (!(mpn || sku)) {
     return Promise.reject(Error('Mpn or Sku required'))
   }
@@ -115,6 +119,12 @@ function run(query) {
       } else if (!r.get('mpn')) {
         return resolve()
       }
+      console.info(
+        `request for ${query.get('term') ||
+          query.getIn(['mpn', 'part']) ||
+          query.getIn(['sku', 'part'])} took ${Date.now() -
+          time_stamped.get('time')} ms`
+      )
       resolve(r.toJS())
     })
     request_bus.emit('request', time_stamped)
