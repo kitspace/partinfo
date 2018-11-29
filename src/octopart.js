@@ -18,7 +18,7 @@ const retailers_used = immutable.Set.fromKeys(retailer_map)
 function transform(queries) {
   return flatten(
     queries.map(q => {
-      const ret = {limit: 1}
+      const ret = {}
       let type
       if (q.get('mpn')) {
         type = 'match:'
@@ -110,18 +110,20 @@ function octopart(queries) {
             result.items.map(i => toPart(query, i).set('type', i.type))
           )
         } else {
-          response = toPart(query, result.items[0]).set('type', 'match')
+          let parts = immutable.List(
+            result.items.map(i => toPart(query, i).set('type', 'match'))
+          )
           const query_sku = query.get('sku')
           if (query_sku) {
             // make sure the queried sku is actually in the offers, else octopart
             // is bullshitting us
-            const contains_sku = response
-              .get('offers')
-              .some(offer => offer.get('sku').equals(query_sku))
-            if (!contains_sku) {
-              return returns.set(query, empty)
-            }
+            parts = parts.filter(part =>
+              part
+                .get('offers')
+                .some(offer => offer.get('sku').equals(query_sku))
+            )
           }
+          response = parts.first()
         }
         return returns.set(query, response)
       }, immutable.Map())
