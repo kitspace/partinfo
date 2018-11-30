@@ -104,7 +104,7 @@ function octopart(queries) {
         if (result == null || result.items.length === 0) {
           return returns.set(query, empty)
         }
-        let response
+        let response = empty
         if (query.get('term')) {
           response = immutable.List(
             result.items.map(i => toPart(query, i).set('type', i.type))
@@ -123,7 +123,7 @@ function octopart(queries) {
                 .some(offer => offer.get('sku').equals(query_sku))
             )
           }
-          response = parts.first()
+          response = parts.first() || empty
         }
         return returns.set(query, response)
       }, immutable.Map())
