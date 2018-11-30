@@ -52,7 +52,7 @@ function run(part) {
       const this_offers = offers.filter(
         offer => offer.getIn(['sku', 'vendor']) === name
       )
-      return runRetailer(name, this_offers)
+      return runOffers(name, this_offers)
     })
   ).then(newOffers => {
     newOffers = immutable.List(newOffers).flatten(1)
@@ -79,7 +79,7 @@ function run(part) {
   })
 }
 
-function runRetailer(name, offers) {
+function runOffers(name, offers) {
   return Promise.all(
     offers.map(offer =>
       retailers[name](offer.getIn(['sku', 'part'])).then(o =>
