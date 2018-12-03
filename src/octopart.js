@@ -128,7 +128,6 @@ function octopart(queries) {
         return returns.set(query, response)
       }, immutable.Map())
     )
-    .catch(err => console.error(err))
 }
 
 const specImportance = immutable.fromJS([

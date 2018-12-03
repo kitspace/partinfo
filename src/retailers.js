@@ -14,19 +14,6 @@ function runRetailers(results) {
   return Promise.all(
     results
       .map((result, query) => {
-        const query_sku = query.get('sku')
-        if (query_sku) {
-          const offers = result.get('offers') || immutable.List()
-          const contains_sku = offers.some(offer =>
-            offer.get('sku').equals(query_sku)
-          )
-          if (!contains_sku) {
-            result = result.set(
-              'offers',
-              offers.push(immutable.Map({sku: query_sku}))
-            )
-          }
-        }
         let promise
         if (immutable.List.isList(result)) {
           promise = Promise.all(result.map(run)).then(immutable.List)

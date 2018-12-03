@@ -42,23 +42,14 @@ function element14(name, sku) {
     })
     .catch(e => {
       if (e && e.response && e.response.text) {
-        try {
-          const x = JSON.parse(e.response.text)
-          if (x.Fault.Detail.searchException.exceptionCode === '200003') {
-            return immutable.Map({
-              no_longer_stocked: true,
-            })
-          } else {
-            console.error(e)
-          }
-        } catch (e2) {
-          console.error(e)
+        const x = JSON.parse(e.response.text)
+        if (x.Fault.Detail.searchException.exceptionCode === '200003') {
+          return immutable.Map({
+            no_longer_stocked: true,
+          })
         }
-      } else {
-        console.error(e)
       }
-      return immutable.Map()
     })
 }
 
-module.exports = rateLimit(2, 1000, element14)
+module.exports = rateLimit(10, 1000, element14)
