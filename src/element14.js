@@ -43,12 +43,19 @@ function element14(name, sku) {
     .catch(e => {
       if (e && e.response && e.response.text) {
         const x = JSON.parse(e.response.text)
-        if (x.Fault.Detail.searchException.exceptionCode === '200003') {
+        if (
+          x &&
+          x.Fault &&
+          x.Fault.Detail &&
+          x.Fault.Detail.searchException &&
+          x.Fault.Detail.searchException.exceptionCode === '200003'
+        ) {
           return immutable.Map({
             no_longer_stocked: true,
           })
         }
       }
+      throw e
     })
 }
 
