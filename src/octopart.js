@@ -113,6 +113,7 @@ function octopart(queries) {
           let parts = immutable.List(
             result.items.map(i => toPart(query, i).set('type', 'match'))
           )
+          parts = mergeSimilarParts(parts)
           const query_sku = query.get('sku')
           if (query_sku) {
             // make sure the queried sku is actually in the offers, else octopart
@@ -155,6 +156,45 @@ function sortByImportance(specs) {
   })
 }
 
+function normalizeName(name) {
+  return name
+    .toLowerCase()
+    .replace(/-/g, '')
+    .replace(/ /g, '')
+    .replace(/_/g, '')
+    .replace(/&/g, 'and')
+}
+
+function similarEnoughName(name1, name2) {
+  return normalizeName(name1) === normalizeName(name2)
+}
+
+function similarEnough(mpnOrSku1, mpnOrSku2) {
+  const name1 = mpnOrSku1.get('manufacturer') || mpnOrSku1.get('vendor')
+  const name2 = mpnOrSku2.get('manufacturer') || mpnOrSku2.get('vendor')
+  const part1 = mpnOrSku1.get('part')
+  const part2 = mpnOrSku2.get('part')
+  return similarEnoughName(name1, name2) && similarEnoughName(part1, part2)
+}
+
+function mergeSimilarParts(parts) {
+  parts = parts.reduce((prev, part) => {
+    const prevPartIndex = prev.findIndex(p =>
+      similarEnough(p.get('mpn'), part.get('mpn'))
+    )
+    if (prevPartIndex >= 0) {
+      return prev.update(prevPartIndex, prevPart =>
+        prevPart.update('offers', offers => {
+          offers = mergeOffers(offers.concat(part.get('offers')))
+          return offers
+        })
+      )
+    }
+    return prev.push(part)
+  }, immutable.List())
+  return parts
+}
+
 function toPart(query, item) {
   let specs = immutable
     .Map(item.specs)
@@ -167,8 +207,8 @@ function toPart(query, item) {
     })
     .toList()
   specs = sortByImportance(specs)
-  const number = query.getIn(['mpn', 'part']) || item.mpn
-  const manufacturer = query.getIn(['mpn', 'manufacturer']) || item.brand.name
+  const number = item.mpn
+  const manufacturer = item.brand.name
   return immutable.Map({
     mpn: immutable.Map({
       part: number,
