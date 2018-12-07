@@ -86,7 +86,7 @@ const resolverMap = {
 }
 
 function runPart({mpn, sku}) {
-  console.log(
+  console.info(
     `got request for ${(mpn && JSON.stringify(mpn)) ||
       (sku && JSON.stringify(sku))}`
   )
