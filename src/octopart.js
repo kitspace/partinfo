@@ -39,7 +39,7 @@ function transform(queries) {
         ret.reference = 'search:' + reference
         return immutable.List.of(ret).concat(
           transform(q.get('common_parts_matches')).map(x =>
-            Object.assign(x, {reference: 'match:' + reference})
+            Object.assign(x, {reference: 'cpl_match:' + reference})
           )
         )
       }
