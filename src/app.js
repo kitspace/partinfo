@@ -14,6 +14,9 @@ app.options('/graphql', cors())
 //allow enabled cross origin requests
 app.use('/graphql', (req, res, next) => {
   const origin = req.get('origin')
+  if (!origin) {
+    return next()
+  }
   const allowed = config.ALLOWED_CORS_DOMAINS.reduce((prev, d) => {
     return prev || RegExp(d).test(origin)
   }, false)
@@ -22,8 +25,9 @@ app.use('/graphql', (req, res, next) => {
     res.header('Access-Control-Allow-Methods', 'GET,POST')
     res.header('Access-Control-Allow-Headers', 'Content-Type')
     res.header('Access-Control-Allow-Credentials', 'true')
+    return next()
   }
-  return next()
+  return res.sendStatus(403)
 })
 
 app.use(
