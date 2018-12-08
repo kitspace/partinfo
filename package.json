@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "CPAL-1.0",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "forever src/server.js",
     "test": "npm run test:integration",
     "test:integration": "mocha --timeout 30000 integration/"
   },
@@ -13,6 +13,7 @@
     "express": "^4.14.1",
     "express-graphql": "^0.6.3",
     "flat": "^4.0.0",
+    "forever": "^0.15.3",
     "graphql": "^0.9.1",
     "graphql-tools": "^0.10.0",
     "immutable": "^3.8.1",
