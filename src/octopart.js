@@ -271,10 +271,14 @@ function mergeSimilarParts(parts) {
     )
     if (prevPartIndex >= 0) {
       return prev.update(prevPartIndex, prevPart =>
-        prevPart.update('offers', offers => {
-          offers = mergeOffers(offers.concat(part.get('offers')))
-          return offers
-        })
+        prevPart
+          .update('offers', offers => {
+            offers = mergeOffers(offers.concat(part.get('offers')))
+            return offers
+          })
+          .update('type', type => {
+            return /match/.test(part.get('type')) ? part.get('type') : type
+          })
       )
     }
     return prev.push(part)
