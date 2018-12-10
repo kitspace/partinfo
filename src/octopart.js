@@ -33,6 +33,9 @@ function transform(queries) {
         type = 'search:'
         ret.q = q.get('term')
         ret.limit = 20
+        if (q.get('electro_grammar')) {
+          ret.electro_grammar = q.get('electro_grammar').toJS()
+        }
       }
       if (q.get('common_parts_matches')) {
         const reference = String(q.hashCode())
@@ -49,32 +52,100 @@ function transform(queries) {
   )
 }
 
-const run = rateLimit(3, 1000, function(octopart_queries) {
-  return superagent
-    .get('https://octopart.com/api/v3/parts/match')
+const run = rateLimit(3, 1000, function(query) {
+  if (immutable.List.isList(query)) {
+    return superagent
+      .get('https://octopart.com/api/v3/parts/match')
+      .query(
+        'include[]=specs&include[]=short_description&include[]=imagesets&include[]=datasheets'
+      )
+      .query({
+        apikey,
+        queries: JSON.stringify(query),
+      })
+      .set('Accept', 'application/json')
+  }
+
+  const p = superagent
+    .get('https://octopart.com/api/v3/parts/search')
     .query(
       'include[]=specs&include[]=short_description&include[]=imagesets&include[]=datasheets'
     )
     .query({
+      q: query.q,
       apikey,
-      queries: JSON.stringify(octopart_queries),
     })
-    .set('Accept', 'application/json')
+    .accept('application/json')
+  for (const filter of query.filters) {
+    p.query(filter)
+  }
+  return p
 })
+
+function transformSearchQueries(queries) {
+  return queries.flatMap(query => {
+    const reference = query.reference
+    const filters = filtersFromElectroGrammar(query.electro_grammar)
+    const eg = {q: query.electro_grammar.type, filters, reference}
+    const term = {q: query.q, filters, reference}
+    return [eg]
+  })
+}
+
+function filtersFromElectroGrammar(eg) {
+  const filters = []
+  if (eg.size != null) {
+    filters.push('filter[queries][]=specs.case_package.value:' + eg.size)
+  }
+  if (eg.resistance != null) {
+    filters.push('filter[queries][]=specs.resistance.value:' + eg.resistance)
+  }
+  if (eg.power_rating != null) {
+    filters.push(
+      `filter[queries][]=specs.power_rating.value:[${eg.power_rating}+TO+*]`
+    )
+  }
+  if (eg.capacitance != null) {
+    filters.push('filter[queries][]=specs.capacitance.value:' + eg.capacitance)
+  }
+  if (eg.characteristic != null) {
+    filters.push(
+      'filter[queries][]=specs.dielectric_characteristic.value:' +
+        eg.characteristic
+    )
+  }
+  if (eg.voltage_rating != null) {
+    filters.push(
+      `filter[queries][]=specs.voltage_rating_dc.value:[${
+        eg.voltage_rating
+      }+TO+*]`
+    )
+  }
+  return filters
+}
 
 function octopart(queries) {
   const octopart_queries = transform(queries)
-  const groups = splitIntoChunks(octopart_queries, 20)
-  return Promise.all(groups.toArray().map(run))
+  let search_queries = octopart_queries.filter(q => q.electro_grammar)
+  search_queries = transformSearchQueries(search_queries)
+  const part_match_queries = octopart_queries.filter(q => !q.electro_grammar)
+  const groups = splitIntoChunks(part_match_queries, 20)
+  return Promise.all(
+    groups.concat(search_queries).map(q => run(q).then(r => [q, r]))
+  )
     .then(responses =>
-      responses.reduce((prev, res) => {
+      responses.reduce((prev, [q, res]) => {
         if (res.status !== 200) {
           console.error(res.status, queries)
         }
         if (!res.body || !res.body.results) {
           return prev
         }
-        return prev.concat(res.body.results)
+        let results = res.body.results
+        if (q.filters) {
+          results.forEach(r => (r.reference = q.reference))
+        }
+        return prev.concat(results)
       }, [])
     )
     .then(results =>
@@ -88,18 +159,23 @@ function octopart(queries) {
         if (!query.get('term')) {
           result = result[0]
         } else {
-          result = result.reduce(
-            (p, r) => {
-              return Object.assign(p, {
-                items: p.items.concat(
-                  r.items.map(i => {
-                    return Object.assign(i, {type: r.reference.split(':')[0]})
-                  })
-                ),
-              })
-            },
-            {items: []}
-          )
+          if (query.get('electro_grammar')) {
+            // we have used a parts/search instead of parts/match so the result is a different shape
+            result = {items: result.map(r => r.item).filter(x => x)}
+          } else {
+            result = result.reduce(
+              (p, r) => {
+                return Object.assign(p, {
+                  items: p.items.concat(
+                    r.items.map(i => {
+                      return Object.assign(i, {type: r.reference.split(':')[0]})
+                    })
+                  ),
+                })
+              },
+              {items: []}
+            )
+          }
         }
         if (result == null || result.items.length === 0) {
           return returns.set(query, empty)
@@ -136,7 +212,8 @@ const specImportance = immutable.fromJS([
   ['case_package'],
   ['dielectric_characteristic'],
   ['resistance_tolerance', 'capacitance_tolerance'],
-  ['voltage_rating', 'power_rating'],
+  ['power_rating'],
+  ['voltage_rating_dc', 'voltage_rating'],
   ['pin_count'],
   ['case_package_si'],
 ])

@@ -93,8 +93,9 @@ function fromRedis(redis_response) {
 
 function queryToKey(query) {
   return query
-    .filter((_, k) => k !== 'id' && k !== 'common_parts_matches')
+    .filter(
+      (_, k) =>
+        k !== 'id' && k !== 'common_parts_matches' && k !== 'electro_grammar'
+    )
     .hashCode()
 }
-
-module.exports = {}
