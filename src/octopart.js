@@ -149,26 +149,28 @@ function octopart(queries) {
       }, [])
     )
     .then(results =>
-      queries.reduce((returns, query) => {
-        const empty = query.get('term') ? immutable.List() : immutable.Map()
+      queries.reduce((previousResults, query) => {
+        const previous = previousResults.get(query)
+        const empty =
+          previous || query.get('term') ? immutable.List() : immutable.Map()
         const query_id = String(query.hashCode())
         let result = results.filter(r => r.reference.split(':')[1] === query_id)
         if (result.length === 0) {
-          return returns.set(query, empty)
+          return previousResults.set(query, empty)
         }
         if (!query.get('term')) {
           result = result[0]
         } else {
-          if (query.get('electro_grammar')) {
-            // we have used a parts/search instead of parts/match so the result is a different shape
+          if (query.get('electro_grammar') && !result.items) {
+            // we have used a parts/search aswell as parts/match and the result
+            // is a different shape depending on that
             result = {
-              items: result
-                .map(
-                  x =>
-                    x.item &&
-                    Object.assign(x.item, {type: x.reference.split(':')[0]})
-                )
-                .filter(x => x),
+              items: result.map(x => {
+                let item = x.item || x.items[0]
+                return Object.assign(item, {
+                  type: x.reference.split(':')[0],
+                })
+              }),
             }
           } else {
             result = result.reduce(
@@ -186,11 +188,11 @@ function octopart(queries) {
           }
         }
         if (result == null || result.items.length === 0) {
-          return returns.set(query, empty)
+          return previousResults.set(query, empty)
         }
         let response = empty
         if (query.get('term')) {
-          response = immutable.List(
+          response = response.concat(
             result.items.map(i => toPart(query, i).set('type', i.type))
           )
         } else {
@@ -210,7 +212,7 @@ function octopart(queries) {
           }
           response = parts.first() || empty
         }
-        return returns.set(query, response)
+        return previousResults.set(query, response)
       }, immutable.Map())
     )
 }
