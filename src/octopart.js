@@ -192,9 +192,8 @@ function octopart(queries) {
         }
         let response = empty
         if (query.get('term')) {
-          response = response.concat(
-            result.items.map(i => toPart(query, i).set('type', i.type))
-          )
+          const newParts = result.items.map(i => toPart(query, i).set('type', i.type))
+          response = mergeSimilarParts(response.concat(newParts))
         } else {
           let parts = immutable.List(
             result.items.map(i => toPart(query, i).set('type', 'match'))
