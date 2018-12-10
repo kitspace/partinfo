@@ -151,12 +151,11 @@ function octopart(queries) {
     .then(results =>
       queries.reduce((previousResults, query) => {
         const previous = previousResults.get(query)
-        const empty =
-          previous || query.get('term') ? immutable.List() : immutable.Map()
+        const empty = query.get('term') ? immutable.List() : immutable.Map()
         const query_id = String(query.hashCode())
         let result = results.filter(r => r.reference.split(':')[1] === query_id)
         if (result.length === 0) {
-          return previousResults.set(query, empty)
+          return previousResults.set(query, previous || empty)
         }
         if (!query.get('term')) {
           result = result[0]
@@ -190,9 +189,11 @@ function octopart(queries) {
         if (result == null || result.items.length === 0) {
           return previousResults.set(query, empty)
         }
-        let response = empty
+        let response = previous || empty
         if (query.get('term')) {
-          const newParts = result.items.map(i => toPart(query, i).set('type', i.type))
+          const newParts = result.items.map(i =>
+            toPart(query, i).set('type', i.type)
+          )
           response = mergeSimilarParts(response.concat(newParts))
         } else {
           let parts = immutable.List(
@@ -209,7 +210,7 @@ function octopart(queries) {
                 .some(offer => offer.get('sku').equals(query_sku))
             )
           }
-          response = parts.first() || empty
+          response = parts.first() || response
         }
         return previousResults.set(query, response)
       }, immutable.Map())
