@@ -161,7 +161,15 @@ function octopart(queries) {
         } else {
           if (query.get('electro_grammar')) {
             // we have used a parts/search instead of parts/match so the result is a different shape
-            result = {items: result.map(r => r.item).filter(x => x)}
+            result = {
+              items: result
+                .map(
+                  x =>
+                    x.item &&
+                    Object.assign(x.item, {type: x.reference.split(':')[0]})
+                )
+                .filter(x => x),
+            }
           } else {
             result = result.reduce(
               (p, r) => {
