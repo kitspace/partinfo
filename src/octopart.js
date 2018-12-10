@@ -134,83 +134,52 @@ function octopart(queries) {
     groups.concat(search_queries).map(q => run(q).then(r => [q, r]))
   )
     .then(responses =>
-      responses.reduce((prev, [q, res]) => {
+      immutable.List(responses).flatMap(([q, res]) => {
         if (res.status !== 200) {
           console.error(res.status, queries)
         }
         if (!res.body || !res.body.results) {
-          return prev
+          return []
         }
-        let results = res.body.results
-        if (q.filters) {
-          results.forEach(r => (r.reference = q.reference))
-        }
-        return prev.concat(results)
-      }, [])
-    )
-    .then(results =>
-      queries.reduce((previousResults, query) => {
-        const previous = previousResults.get(query)
-        const empty = query.get('term') ? immutable.List() : immutable.Map()
-        const query_id = String(query.hashCode())
-        let result = results.filter(r => r.reference.split(':')[1] === query_id)
-        if (result.length === 0) {
-          return previousResults.set(query, previous || empty)
-        }
-        if (!query.get('term')) {
-          result = result[0]
-        } else {
-          if (query.get('electro_grammar') && !result.items) {
-            // we have used a parts/search aswell as parts/match and the result
-            // is a different shape depending on that
-            result = {
-              items: result.map(x => {
-                let item = x.item || x.items[0]
-                return Object.assign(item, {
-                  type: x.reference.split(':')[0],
-                })
-              }),
-            }
-          } else {
-            result = result.reduce(
-              (p, r) => {
-                return Object.assign(p, {
-                  items: p.items.concat(
-                    r.items.map(i => {
-                      return Object.assign(i, {type: r.reference.split(':')[0]})
-                    })
-                  ),
-                })
-              },
-              {items: []}
-            )
+        return immutable.List(res.body.results).flatMap(result => {
+          if (result.__class__ === 'SearchResult') {
+            const [type, reference] = q.reference.split(':')
+            return [Object.assign(result.item, {reference, type})]
           }
+          if (result.__class__ === 'PartsMatchResult') {
+            const [type, reference] = result.reference.split(':')
+            return result.items.map(i => Object.assign(i, {reference, type}))
+          }
+        })
+      })
+    )
+    .then(responses =>
+      queries.reduce((previousResults, query) => {
+        const empty = query.get('term') ? immutable.List() : immutable.Map()
+        const previous = previousResults.get(query) || empty
+        const query_id = String(query.hashCode())
+        let results = responses.filter(r => r.reference === query_id)
+        if (results.length === 0) {
+          return previousResults.set(query, previous)
         }
-        if (result == null || result.items.length === 0) {
-          return previousResults.set(query, empty)
-        }
-        let response = previous || empty
+        let response = previous
         if (query.get('term')) {
-          const newParts = result.items.map(i =>
-            toPart(query, i).set('type', i.type)
-          )
-          response = mergeSimilarParts(response.concat(newParts))
+          let newParts = results.map(i => toPart(query, i))
+          response = mergeSimilarParts(previous.concat(newParts))
         } else {
-          let parts = immutable.List(
-            result.items.map(i => toPart(query, i).set('type', 'match'))
-          )
-          parts = mergeSimilarParts(parts)
+          let newParts = immutable.List(results.map(i => toPart(query, i)))
+          newParts = mergeSimilarParts(newParts)
           const query_sku = query.get('sku')
           if (query_sku) {
             // make sure the queried sku is actually in the offers, else octopart
             // is bullshitting us
-            parts = parts.filter(part =>
+            newParts = newParts.filter(part =>
               part
                 .get('offers')
                 .some(offer => offer.get('sku').equals(query_sku))
             )
           }
-          response = parts.first() || response
+          response = newParts.first() || previous
         }
         return previousResults.set(query, response)
       }, immutable.Map())
@@ -310,6 +279,7 @@ function toPart(query, item) {
     datasheet: datasheet(item),
     offers: offers(item),
     specs,
+    type: item.type,
   })
 }
 
