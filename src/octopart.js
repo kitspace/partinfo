@@ -2,6 +2,7 @@ const superagent = require('superagent')
 const immutable = require('immutable')
 const apikey = require('../config').OCTOPART_API_KEY
 const rateLimit = require('promise-rate-limit')
+const electroGrammar = require('electro-grammar')
 
 const retailer_map = immutable.OrderedMap({
   'Digi-Key': 'Digikey',
@@ -165,6 +166,13 @@ function octopart(queries) {
         let response = previous
         if (query.get('term')) {
           let newParts = results.map(i => toPart(query, i))
+          // tolerance seems impossible to filter by through octopart api
+          // so we filter out here outside of tolerance parts here
+          const tolerance = query.getIn(['electro_grammar', 'tolerance'])
+          if (tolerance) {
+            const type = query.getIn(['electro_grammar', 'type'])
+            newParts = filterByTolerance(type, tolerance, newParts)
+          }
           response = mergeSimilarParts(previous.concat(newParts))
         } else {
           let newParts = immutable.List(results.map(i => toPart(query, i)))
@@ -196,6 +204,30 @@ const specImportance = immutable.fromJS([
   ['pin_count'],
   ['case_package_si'],
 ])
+
+function filterByTolerance(type, tolerance, parts) {
+  const spec_key =
+    type === 'resistor'
+      ? 'resistance_tolerance'
+      : type === 'capacitor' ? 'capacitance_tolerance' : null
+  if (spec_key) {
+    return parts.filter(part => {
+      const spec = part.get('specs').find(s => s.get('key') === spec_key)
+      if (spec) {
+        const {tolerance: specTolerance} = electroGrammar.parse(
+          '0.1uF ' + spec.get('value')
+        )
+        if (specTolerance == null) {
+          // we didn't understand the tolerance so let's be on the safe side
+          return false
+        }
+        return specTolerance <= tolerance
+      }
+      return true
+    })
+  }
+  return parts
+}
 
 function getImportance(spec) {
   const key = spec.get('key')
