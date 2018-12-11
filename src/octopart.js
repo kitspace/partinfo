@@ -84,12 +84,11 @@ const run = rateLimit(3, 1000, function(query) {
 })
 
 function transformSearchQueries(queries) {
-  return queries.flatMap(query => {
+  return queries.map(query => {
     const reference = query.reference
     const filters = filtersFromElectroGrammar(query.electro_grammar)
-    const eg = {q: query.electro_grammar.type, filters, reference}
-    const term = {q: query.q, filters, reference}
-    return [eg]
+    const q = query.electro_grammar.type + ' ' + query.electro_grammar.ignored
+    return {q, filters, reference}
   })
 }
 

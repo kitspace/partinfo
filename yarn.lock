@@ -551,11 +551,11 @@ ee-first@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
 
-"electro-grammar@git+https://github.com/kitspace/electro-grammar#ignore-footprint-prefix":
+"electro-grammar@git+https://github.com/kitspace/electro-grammar#dev2":
   version "1.0.0"
-  resolved "git+https://github.com/kitspace/electro-grammar#20d045a1fac665377e08a357b52050f5ee89b1f0"
+  resolved "git+https://github.com/kitspace/electro-grammar#aea5453d72e2aaf72698683415d6ffae4aafdff4"
   dependencies:
-    nearley "https://github.com/Hardmath123/nearley"
+    nearley "^2.15.1"
 
 encodeurl@~1.0.1:
   version "1.0.1"
@@ -1583,6 +1583,11 @@ mocha@^3.2.0:
     mkdirp "0.5.1"
     supports-color "3.1.2"
 
+moo@^0.4.3:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/moo/-/moo-0.4.3.tgz#3f847a26f31cf625a956a87f2b10fbc013bfd10e"
+  integrity sha512-gFD2xGCl8YFgGHsqJ9NKRVdwlioeW3mI1iqfLNYQOv0+6JRwG58Zk9DIGQgyIaffSYaO1xsKnMaYzzNr1KyIAw==
+
 ms@0.7.1:
   version "0.7.1"
   resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"
@@ -1637,10 +1642,12 @@ ncp@0.4.x:
   resolved "https://registry.yarnpkg.com/ncp/-/ncp-0.4.2.tgz#abcc6cbd3ec2ed2a729ff6e7c1fa8f01784a8574"
   integrity sha1-q8xsvT7C7Spyn/bnwfqPAXhKhXQ=
 
-"nearley@https://github.com/Hardmath123/nearley":
-  version "2.11.1"
-  resolved "https://github.com/Hardmath123/nearley#94f9b0fa0c1caeabe87c7c25e049a4b22048b61f"
+nearley@^2.15.1:
+  version "2.15.1"
+  resolved "https://registry.yarnpkg.com/nearley/-/nearley-2.15.1.tgz#965e4e6ec9ed6b80fc81453e161efbcebb36d247"
+  integrity sha512-8IUY/rUrKz2mIynUGh8k+tul1awMKEjeHHC5G3FHvvyAW6oq4mQfNp2c0BMea+sYZJvYcrrM6GmZVIle/GRXGw==
   dependencies:
+    moo "^0.4.3"
     nomnom "~1.6.2"
     railroad-diagrams "^1.0.0"
     randexp "0.4.6"

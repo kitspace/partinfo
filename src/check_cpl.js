@@ -11,7 +11,7 @@ function checkCPL(queries) {
   return queries.map(query => {
     const term = query.get('term')
     if (term != null) {
-      const c = electroGrammar.parse(term)
+      const c = electroGrammar.parse(term, {returnIgnored: true})
       if (c.type) {
         query = query.set('electro_grammar', immutable.fromJS(c))
       }
