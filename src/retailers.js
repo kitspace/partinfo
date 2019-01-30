@@ -8,7 +8,7 @@ const retailers = {
   //Newark: require('./newark'),
 }
 
-const not_yet = immutable.List.of('Digikey', 'Mouser', 'RS')
+const not_yet = immutable.List.of('Digikey', 'Mouser', 'RS', 'Newark')
 
 function runRetailers(results) {
   return Promise.all(
