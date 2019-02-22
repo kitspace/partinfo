@@ -1,14 +1,20 @@
 const immutable = require('immutable')
 
 const octopart = require('./octopart')
+const {ELEMENT14_API_KEYS} = require('../config')
 
-const retailers = {
-  Farnell: require('./farnell'),
-  //disabled for now until we can optimize
-  //Newark: require('./newark'),
+if (!ELEMENT14_API_KEYS[0]) {
+  console.warn('Not using element14 API')
 }
 
-const not_yet = immutable.List.of('Digikey', 'Mouser', 'RS', 'Newark')
+const retailers =
+  ELEMENT14_API_KEYS[0]
+    ? immutable.Map()
+    : immutable.Map({
+        Farnell: require('./farnell'),
+        // disabled for now until we can optimize
+        //Newark: require('./newark'),
+      })
 
 function runRetailers(results) {
   return Promise.all(
@@ -35,14 +41,16 @@ function run(query, part) {
   const query_sku = query.get('sku')
   if (
     query_sku &&
-    !not_yet.includes(query_sku.get('vendor')) &&
+    retailers.has(query_sku.get('vendor')) &&
     !offers.some(offer => offer.get('sku').equals(query_sku))
   ) {
     offers = offers.push(immutable.Map({sku: query_sku}))
   }
+  // get all the offers that are not going to be updated by querying retailer
+  // specific APIs
   const not_yet_offers = offers.filter(offer => {
     const vendor = offer.getIn(['sku', 'vendor'])
-    return not_yet.includes(vendor)
+    return !retailers.has(vendor)
   })
   return Promise.all(
     Object.keys(retailers).map(name => {
@@ -54,8 +62,8 @@ function run(query, part) {
   ).then(newOffers => {
     newOffers = immutable.List(newOffers).flatten(1)
     if (!part.get('mpn')) {
-      //if octopart didn't find it the first time then get an mpn from the
-      //retailers and try that
+      // if octopart didn't find it the first time then get an mpn from the
+      // retailers and try that
       const with_mpn = newOffers.find(x => x.get('mpn'))
       if (with_mpn) {
         const mpn = with_mpn.get('mpn')

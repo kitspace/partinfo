@@ -4,5 +4,6 @@ module.exports = {
     //api key for octopart, sign up through https://octopart.com/auth/create
     OCTOPART_API_KEY: process.env.OCTOPART_API_KEY,
     // api keys for element14, sign up through https://partner.element14.com/
+    // if these are not present the element14 API is not used
     ELEMENT14_API_KEYS: (process.env.ELEMENT14_API_KEYS || '').split(','),
 }
