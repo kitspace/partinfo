@@ -42,4 +42,10 @@ yarn install
 yarn start
 ```
 
-You should be able to see a [GraphiQL client](https://github.com/graphql/graphiql) when visting `http://localhost:4001/graphql` in your browser. Try this [example query](http://localhost:4001/graphql?query={%0A%20%20part(mpn%3A%20{part%3A%20%22NE555P%22%2C%20manufacturer%3A%20%22Texas%20Instruments%22})%20{%0A%20%20%20%20datasheet%0A%20%20%20%20description%0A%20%20%20%20type%0A%20%20%20%20offers%20{%0A%20%20%20%20%20%20sku%20{%0A%20%20%20%20%20%20%20%20vendor%0A%20%20%20%20%20%20%20%20part%0A%20%20%20%20%20%20}%0A%20%20%20%20%20%20prices%20{%0A%20%20%20%20%20%20%20%20USD%0A%20%20%20%20%20%20%20%20EUR%0A%20%20%20%20%20%20%20%20GBP%0A%20%20%20%20%20%20%20%20SGD%0A%20%20%20%20%20%20}%0A%20%20%20%20}%0A%20%20}%0A}%0A). 
+You should be able to see a [GraphiQL client](https://github.com/graphql/graphiql) when visting `http://localhost:4001/graphql` in your browser. Try this [example query](http://localhost:4001/graphql?query={%0A%20%20part(mpn%3A%20{part%3A%20%22NE555P%22%2C%20manufacturer%3A%20%22Texas%20Instruments%22})%20{%0A%20%20%20%20datasheet%0A%20%20%20%20description%0A%20%20%20%20type%0A%20%20%20%20offers%20{%0A%20%20%20%20%20%20sku%20{%0A%20%20%20%20%20%20%20%20vendor%0A%20%20%20%20%20%20%20%20part%0A%20%20%20%20%20%20}%0A%20%20%20%20%20%20prices%20{%0A%20%20%20%20%20%20%20%20USD%0A%20%20%20%20%20%20%20%20EUR%0A%20%20%20%20%20%20%20%20GBP%0A%20%20%20%20%20%20%20%20SGD%0A%20%20%20%20%20%20}%0A%20%20%20%20}%0A%20%20}%0A}%0A).
+
+Query responses will be cached (and persisted to disk) by Redis. If you want to clear all Redis data run:
+
+```
+redis-cli flushall
+```
