@@ -1,6 +1,5 @@
 const redis = require('redis')
 const immutable = require('immutable')
-const {flatten, unflatten} = require('flat')
 
 const octopart = require('./octopart')
 const runRetailers = require('./retailers')

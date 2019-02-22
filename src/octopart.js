@@ -339,7 +339,6 @@ function offers(item) {
     .Set(item.offers)
     .filter(o => retailers_used.includes(o.seller.name))
     .map(offer => {
-      console.log('seller', offer.seller.name)
       const vendor = retailer_map.get(offer.seller.name)
       let part = offer.sku || ''
       if (vendor !== 'Digikey') {

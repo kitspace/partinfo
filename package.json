@@ -12,7 +12,6 @@
     "electro-grammar": "git+https://github.com/kitspace/electro-grammar#dev2",
     "express": "^4.14.1",
     "express-graphql": "^0.6.3",
-    "flat": "^4.0.0",
     "forever": "^0.15.3",
     "graphql": "^0.9.1",
     "graphql-tools": "^0.10.0",
