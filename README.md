@@ -28,11 +28,12 @@ $EDITOR config.js
 #### Quick start for Debian/Ubuntu
 
 ```
+cp config.js.in config.js 
+$EDITOR config.js
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
 sudo apt update && sudo apt install nodejs yarn redis
 yarn install
-cp config.js.in config.js # and add your API keys in there
 ```
 
 ### Running the server
@@ -41,4 +42,4 @@ cp config.js.in config.js # and add your API keys in there
 yarn start
 ```
 
-You should be able to see a [GraphiQL client](https://github.com/graphql/graphiql) when visting `http://localhost:4001/graphql` in your browser.
+You should be able to see a [GraphiQL client](https://github.com/graphql/graphiql) when visting `http://localhost:4001/graphql` in your browser. Try this [example query](http://localhost:4001/graphql?query={%0A%20%20part(mpn%3A%20{part%3A%20%22NE555P%22%2C%20manufacturer%3A%20%22Texas%20Instruments%22})%20{%0A%20%20%20%20datasheet%0A%20%20%20%20description%0A%20%20%20%20type%0A%20%20%20%20offers%20{%0A%20%20%20%20%20%20sku%20{%0A%20%20%20%20%20%20%20%20vendor%0A%20%20%20%20%20%20%20%20part%0A%20%20%20%20%20%20}%0A%20%20%20%20%20%20prices%20{%0A%20%20%20%20%20%20%20%20USD%0A%20%20%20%20%20%20%20%20EUR%0A%20%20%20%20%20%20%20%20GBP%0A%20%20%20%20%20%20%20%20SGD%0A%20%20%20%20%20%20}%0A%20%20%20%20}%0A%20%20}%0A}%0A). 
