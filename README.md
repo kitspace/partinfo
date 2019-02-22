@@ -28,7 +28,7 @@ $EDITOR config.js
 #### Quick start for Debian/Ubuntu
 
 ```
-cp config.js.in config.js 
+cp config.js.in config.js
 $EDITOR config.js
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
@@ -48,4 +48,12 @@ Query responses will be cached (and persisted to disk) by Redis. If you want to 
 
 ```
 redis-cli flushall
+```
+
+### Tests
+
+There are some automated tests in `integration/test_api.js` that you can run:
+
+```
+yarn test
 ```
