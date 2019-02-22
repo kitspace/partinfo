@@ -4,4 +4,7 @@ A microservice to get information on electronic components. This is used on [kit
 
 ![Popup screenshot](popup.png)
 
-This is a [GraphQL](http://graphql.org/) API, the schema is detailed in [schema.js](src/schema.js). Currently it is simply a subset and re-arrangement of the information retrieved from the [Octopart API](https://octopart.com/api/home) but additional API backends or web scraping could be added in the future. 
+This is a [GraphQL](http://graphql.org/) API, the schema is detailed in [schema.js](src/schema.js). It currently makes use of:
+
+- [Octopart API](https://octopart.com/api/home)
+- [element14 API](https://partner.element14.com/docs/Product_Search_API_REST__Description)
