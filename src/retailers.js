@@ -9,12 +9,12 @@ if (!ELEMENT14_API_KEYS[0]) {
 
 const retailers =
   ELEMENT14_API_KEYS[0]
-    ? immutable.Map()
-    : immutable.Map({
+    ? immutable.Map({
         Farnell: require('./farnell'),
         // disabled for now until we can optimize
         //Newark: require('./newark'),
       })
+    : immutable.Map()
 
 function runRetailers(results) {
   return Promise.all(
