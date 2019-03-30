@@ -351,6 +351,7 @@ function offers(item) {
         },
         prices: offer.prices,
         in_stock_quantity: offer.in_stock_quantity,
+        multipack_quantity: offer.multipack_quantity,
         moq: offer.moq,
       })
     })
