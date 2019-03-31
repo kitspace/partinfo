@@ -14,28 +14,39 @@ function rs(sku) {
     .then(r => {
       if (RegExp('^https://uk.rs-online.com/web/p/').test(r.request.url)) {
         //  we were re-directed: it found an exact match
+
         const $ = cheerio.load(r.text)
 
         const stockText = $('.stock-msg-content').text()
-        const in_stock_quantity = stockText ? parseInt(stockText, 10) : null
+        let in_stock_quantity = parseInt(stockText, 10)
+
+        if (isNaN(in_stock_quantity)) {
+          in_stock_quantity = null
+        }
+
+        const discontinued = $('.icon-rs_28-discontinued').html() != null
+        const warning = $('.icon-rs_61-warning').html() != null
+        if (discontinued || (in_stock_quantity == null && warning)) {
+          in_stock_quantity = 0
+        }
 
         let part = $(
-          '#pagecell > div > div.col-xs-12.prodDescDivLL > div.col-xs-10 > div.col-xs-12.keyDetailsDivLL > ul > li:nth-child(2) > span.keyValue'
+          'div.keyDetailsDivLL > ul > li:nth-child(2) > span.keyValue'
         )
           .text()
           .trim()
           .replace(/-/g, '')
-        let manufacturer = $(
-          '#pagecell > div > div.col-xs-12.prodDescDivLL > div.col-xs-10 > div.col-xs-12.keyDetailsDivLL > ul > li:nth-child(3)'
-        )
+        let manufacturer = $('div.keyDetailsDivLL > ul > li:nth-child(3)')
           .text()
           .trim()
+
         // rs pro items don't have a manufacturer part on the page so we shift
         // everything along one and use the sku as the part
         if (/rs pro/i.test(part)) {
           manufacturer = part
           part = sku
         }
+
         const mpn = immutable.Map({manufacturer, part})
 
         let multipack_quantity = $('.topPriceArea')
@@ -45,11 +56,23 @@ function rs(sku) {
           multipack_quantity = multipack_quantity[1]
         }
 
-        return immutable.Map({
-          mpn,
-          multipack_quantity,
-          in_stock_quantity,
-        })
+        let moq = $('#value-row-0 > div:nth-child(1)')
+          .text()
+          .trim()
+          .match(/^\d+/)
+
+        if (moq != null) {
+          moq = moq[0]
+        }
+
+        return immutable
+          .Map({
+            mpn,
+            multipack_quantity,
+            moq,
+            in_stock_quantity,
+          })
+          .filter(x => x != null)
       }
     })
     .catch(e => {
