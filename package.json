@@ -8,6 +8,7 @@
     "test:integration": "mocha --timeout 30000 integration/"
   },
   "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
     "cors": "^2.8.1",
     "electro-grammar": "git+https://github.com/kitspace/electro-grammar#dev2",
     "express": "^4.14.1",

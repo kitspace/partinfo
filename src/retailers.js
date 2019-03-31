@@ -7,14 +7,14 @@ if (!ELEMENT14_API_KEYS[0]) {
   console.warn('Not using element14 API')
 }
 
-const retailers =
-  ELEMENT14_API_KEYS[0]
-    ? immutable.Map({
-        Farnell: require('./farnell'),
-        // disabled for now until we can optimize
-        //Newark: require('./newark'),
-      })
-    : immutable.Map()
+const retailers = (ELEMENT14_API_KEYS[0]
+  ? immutable.Map({
+      Farnell: require('./farnell'),
+      // disabled for now until we can optimize
+      //Newark: require('./newark'),
+    })
+  : immutable.Map()
+).merge({RS: require('./rs')})
 
 function runRetailers(results) {
   return Promise.all(
@@ -53,12 +53,15 @@ function run(query, part) {
     return !retailers.has(vendor)
   })
   return Promise.all(
-    Object.keys(retailers).map(name => {
-      const this_offers = offers.filter(
-        offer => offer.getIn(['sku', 'vendor']) === name
-      )
-      return runOffers(name, this_offers)
-    })
+    retailers
+      .keySeq()
+      .map(name => {
+        const this_offers = offers.filter(
+          offer => offer.getIn(['sku', 'vendor']) === name
+        )
+        return runOffers(name, this_offers)
+      })
+      .toArray()
   ).then(newOffers => {
     newOffers = immutable.List(newOffers).flatten(1)
     if (!part.get('mpn')) {
@@ -87,13 +90,13 @@ function run(query, part) {
 function runOffers(name, offers) {
   return Promise.all(
     offers.map(offer =>
-      retailers[name](offer.getIn(['sku', 'part'])).then(o =>
-        offer.mergeDeep(o)
-      )
+      retailers
+        .get(name)(offer.getIn(['sku', 'part']))
+        .then(o => offer.mergeDeep(o))
     )
   )
     .then(offers => offers.filter(o => o.get('no_longer_stocked') !== true))
-    .then(immutable.List)
+    .then(x => immutable.List(x))
 }
 
 module.exports = runRetailers
