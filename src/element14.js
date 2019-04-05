@@ -59,4 +59,4 @@ function element14(name, sku) {
     })
 }
 
-module.exports = rateLimit(10, 1000, element14)
+module.exports = rateLimit(1, 1000, element14)
