@@ -11,7 +11,7 @@ const QUERY_BATCH_SIZE = 20
 const QUERY_MAX_WAIT_MS = 100 //milliseconds
 
 //24hrs
-const CACHE_TIMEOUT_MS = 24 * 60 * 60 * 1000 //milliseconds
+const CACHE_TIMEOUT_MS = 24 * 60 * 60 //seconds
 
 const redisClient = redis.createClient()
 
@@ -78,7 +78,7 @@ function cache(responses) {
   responses.forEach((v, query) => {
     const key = queryToKey(query)
     const values = toRedis(v)
-    redisClient.set(key, values)
+    redisClient.set(key, values, 'EX', CACHE_TIMEOUT_MS)
   })
 }
 
