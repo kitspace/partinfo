@@ -47,6 +47,7 @@ const schema = `
     stock_location     : String
     moq                : Int
     multipack_quantity : Int
+    product_url        : String
   }
 
   type Prices {

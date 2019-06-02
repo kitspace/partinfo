@@ -353,6 +353,7 @@ function offers(item) {
         in_stock_quantity: offer.in_stock_quantity,
         multipack_quantity: offer.multipack_quantity,
         moq: offer.moq,
+        product_url: offer.product_url.replace(apikey, ''),
       })
     })
   return mergeOffers(offers)
