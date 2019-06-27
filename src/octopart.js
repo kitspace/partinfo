@@ -331,7 +331,11 @@ function image(item) {
 }
 
 function datasheet(item) {
-  return item.datasheets.reduce((prev, d) => prev || d.url, null)
+  let d = item.datasheets.reduce((prev, d) => prev || d.url, null)
+  if (d != null) {
+    d = d.replace(apikey, '')
+  }
+  return d
 }
 
 function offers(item) {
