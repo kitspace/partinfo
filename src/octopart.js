@@ -4,7 +4,15 @@ const apikey = require('../config').OCTOPART_API_KEY
 const rateLimit = require('promise-rate-limit')
 const electroGrammar = require('electro-grammar')
 const RateLimiter = require('async-ratelimiter')
+// TODO, only use one redis client
 const Redis = require('ioredis')
+const redis = require('redis')
+
+// 7 days
+const OCTOPART_CACHE_TIMEOUT_S = 7 * 24 * 60 * 60 //seconds
+
+const redisClient = redis.createClient()
+
 
 const limiter = new RateLimiter({
   db: new Redis(),
@@ -28,7 +36,7 @@ const retailers_used = immutable.Set.fromKeys(retailer_map)
 function transform(queries) {
   return flatten(
     queries.map(q => {
-      const ret = {}
+      const ret = {limit: 3}
       let type
       if (q.get('mpn')) {
         type = 'match:'
@@ -87,6 +95,7 @@ const run = rateLimit(3, 1000, async function(query) {
     )
     .query({
       q: query.q,
+      limit: query.limit,
       apikey,
     })
     .accept('application/json')
@@ -101,7 +110,7 @@ function transformSearchQueries(queries) {
     const reference = query.reference
     const filters = filtersFromElectroGrammar(query.electro_grammar)
     const q = query.electro_grammar.type + ' ' + query.electro_grammar.ignored
-    return {q, filters, reference}
+    return {q, filters, reference, limit: 20}
   })
 }
 
@@ -137,22 +146,76 @@ function filtersFromElectroGrammar(eg) {
   return filters
 }
 
+function cacheResponses(responses) {
+  responses.forEach(([_, response]) => {
+    if (
+      response.status === 200 &&
+      response.body &&
+      response.body.request &&
+      response.body.results
+    ) {
+      let key, result
+      if (response.body.request.__class__ === 'SearchRequest') {
+        key = queryToKey(response.body.request)
+        result = JSON.stringify(response.body.results)
+      } else {
+        response.body.request.queries.forEach((q, i) => {
+          key = queryToKey(q)
+          result = JSON.stringify(response.body.results[i])
+        })
+      }
+      redisClient.set(key, result, 'EX', OCTOPART_CACHE_TIMEOUT_S)
+    }
+  })
+  return responses
+}
+
+function queryToKey(query) {
+  const x = immutable
+    .fromJS(query)
+    .filter(
+      (value, k) =>
+        k !== 'stats' &&
+        k !== 'reference' &&
+        k !== '__class__' &&
+        k !== 'facet' &&
+        !(k === 'sortby' && value === 'score desc') &&
+        !(k === 'limit' && value === 10) &&
+        value
+    )
+    .mapEntries(([k, v]) => {
+      if (k === 'filter') {
+        const filters = v.get('queries').map(q => 'filter[queries][]=' + q)
+        return ['filters', filters]
+      }
+      return [k, v]
+    })
+
+  const key = 'octopart:' + x.hashCode()
+  return key
+}
+
+function resolveCached(queries) {}
+
 function octopart(queries) {
   const octopart_queries = transform(queries)
   let search_queries = octopart_queries.filter(q => q.electro_grammar)
   search_queries = transformSearchQueries(search_queries)
+  search_queries.map(q => queryToKey(q))
   const part_match_queries = octopart_queries.filter(q => !q.electro_grammar)
+  part_match_queries.map(q => queryToKey(q))
   const groups = splitIntoChunks(part_match_queries, 20)
   return Promise.all(
     groups.concat(search_queries).map(q => run(q).then(r => [q, r]))
   )
+    .then(cacheResponses)
     .then(responses =>
       immutable.List(responses).flatMap(([q, res]) => {
         if (res.status !== 200) {
           console.error(res.status, queries)
         }
         if (!res.body || !res.body.results) {
-          return []
+          return immutable.List()
         }
         return immutable.List(res.body.results).flatMap(result => {
           if (result.__class__ === 'SearchResult') {
@@ -178,8 +241,8 @@ function octopart(queries) {
         let response = previous
         if (query.get('term')) {
           let newParts = results.map(i => toPart(query, i))
-          // tolerance seems impossible to filter by through octopart api
-          // so we filter out here outside of tolerance parts here
+          // tolerance seems impossible to filter-by through octopart api
+          // so we filter out outside-of-tolerance parts here
           const tolerance = query.getIn(['electro_grammar', 'tolerance'])
           if (tolerance) {
             const type = query.getIn(['electro_grammar', 'type'])
