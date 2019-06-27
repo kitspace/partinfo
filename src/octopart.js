@@ -3,6 +3,15 @@ const immutable = require('immutable')
 const apikey = require('../config').OCTOPART_API_KEY
 const rateLimit = require('promise-rate-limit')
 const electroGrammar = require('electro-grammar')
+const RateLimiter = require('async-ratelimiter')
+const Redis = require('ioredis')
+
+const limiter = new RateLimiter({
+  db: new Redis(),
+  // 1000 requests in 30 days
+  max: 1000,
+  duration: 30 * 24 * 60 * 60 * 1000, // milliseconds
+})
 
 const retailer_map = immutable.OrderedMap({
   'Digi-Key': 'Digikey',
@@ -53,7 +62,11 @@ function transform(queries) {
   )
 }
 
-const run = rateLimit(3, 1000, function(query) {
+const run = rateLimit(3, 1000, async function(query) {
+  const limit = await limiter.get({id: 'dev-partinfo'})
+  if (limit.remaining === 0) {
+    throw new Error('Octpart query limit reached.')
+  }
   if (immutable.List.isList(query)) {
     return superagent
       .get('https://octopart.com/api/v3/parts/match')

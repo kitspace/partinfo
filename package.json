@@ -8,6 +8,7 @@
     "test:integration": "mocha --timeout 30000 integration/"
   },
   "dependencies": {
+    "async-ratelimiter": "^1.2.5",
     "cheerio": "^1.0.0-rc.2",
     "cors": "^2.8.1",
     "electro-grammar": "git+https://github.com/kitspace/electro-grammar#dev2",
@@ -17,6 +18,7 @@
     "graphql": "^0.9.1",
     "graphql-tools": "^0.10.0",
     "immutable": "^3.8.1",
+    "ioredis": "^4.10.0",
     "promise-rate-limit": "^0.0.1",
     "redis": "^2.8.0",
     "superagent": "^3.4.3"
