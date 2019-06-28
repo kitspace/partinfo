@@ -10,8 +10,7 @@ const {request_bus, response_bus} = require('./message_bus')
 const QUERY_BATCH_SIZE = 20
 const QUERY_MAX_WAIT_MS = 100 //milliseconds
 
-//24hrs
-const CACHE_TIMEOUT_S = 24 * 60 * 60 //seconds
+const {QUERY_CACHE_TIMEOUT_S} = require('../config')
 
 const redisClient = redis.createClient()
 
@@ -78,7 +77,7 @@ function cache(responses) {
   responses.forEach((v, query) => {
     const key = queryToKey(query)
     const values = toRedis(v)
-    redisClient.set(key, values, 'EX', CACHE_TIMEOUT_S)
+    redisClient.set(key, values, 'EX', QUERY_CACHE_TIMEOUT_S)
   })
 }
 

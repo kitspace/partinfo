@@ -1,14 +1,20 @@
 module.exports = {
-    //domains allowed to make requests (other than the domain this is served on)
-    ALLOWED_CORS_DOMAINS: [/* 'https://example.com' */],
-    //api key for octopart, sign up through https://octopart.com/auth/create
-    OCTOPART_API_KEY: process.env.OCTOPART_API_KEY,
-    // api keys for element14, sign up through https://partner.element14.com/
-    // if these are not present the element14 API is simply not used but the
-    // server will still work
-    ELEMENT14_API_KEYS: (process.env.ELEMENT14_API_KEYS || '').split(','),
-    //how long before the element14 cache entries expire, in seconds
-    ELEMENT14_CACHE_TIMEOUT_S: 24 * 60 * 60, //24 hours
-    //how long before the RS cache entries expire, in seconds
-    RS_CACHE_TIMEOUT_S: 24 * 60 * 60, //24 hours
+  // domains allowed to make requests (other than the domain this is served on)
+  ALLOWED_CORS_DOMAINS: [
+    /* 'https://example.com' */
+  ],
+  // how long before the overall cached query responses expire, in seconds
+  QUERY_CACHE_TIMEOUT_S: 24 * 60 * 60, // 24 hours
+  // api key for octopart, sign up through https://octopart.com/auth/create
+  OCTOPART_API_KEY: process.env.OCTOPART_API_KEY,
+  // how long before the octopart cache entries expire, in seconds
+  OCTOPART_CACHE_TIMEOUT_S: 7 * 24 * 60 * 60, // 7 days
+  // api keys for element14, sign up through https://partner.element14.com/
+  // if these are not present the element14 API is simply not used but the
+  // server will still work
+  ELEMENT14_API_KEYS: (process.env.ELEMENT14_API_KEYS || '').split(','),
+  // how long before the element14 cache entries expire, in seconds
+  ELEMENT14_CACHE_TIMEOUT_S: 24 * 60 * 60, // 24 hours
+  // how long before the RS cache entries expire, in seconds
+  RS_CACHE_TIMEOUT_S: 24 * 60 * 60, // 24 hours
 }

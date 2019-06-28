@@ -8,8 +8,7 @@ const RateLimiter = require('async-ratelimiter')
 const Redis = require('ioredis')
 const redis = require('redis')
 
-// 7 days
-const OCTOPART_CACHE_TIMEOUT_S = 7 * 24 * 60 * 60 //seconds
+const {OCTOPART_CACHE_TIMEOUT_S} = require('../config')
 
 const redisClient = redis.createClient()
 
