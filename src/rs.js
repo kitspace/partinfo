@@ -2,31 +2,15 @@ const cheerio = require('cheerio')
 const immutable = require('immutable')
 const rateLimit = require('promise-rate-limit')
 const superagent = require('superagent')
-
 const redis = require('redis')
 
-// 24 hrs
-const RS_CACHE_TIMEOUT_S = 24 * 60 * 60 //seconds
+const {RS_CACHE_TIMEOUT_S} = require('../config')
 
 const redisClient = redis.createClient()
 
-const {ELEMENT14_API_KEYS} = require('../config')
-
 let key_select = 0
 
-async function rs(sku) {
-  const url = `https://uk.rs-online.com/web/c/?sra=oss&r=t&searchTerm=${sku}`
-  const cached = await new Promise((resolve, reject) => {
-    redisClient.get(url, (err, response) => {
-      if (err) {
-        console.error(err)
-      }
-      resolve(response)
-    })
-  })
-  if (cached != null) {
-    return immutable.fromJS(JSON.parse(cached))
-  }
+const runQuery = rateLimit(30, 1000, function(url) {
   return superagent
     .get(url)
     .then(r => {
@@ -105,6 +89,22 @@ async function rs(sku) {
     .catch(e => {
       throw e
     })
+})
+
+async function rs(sku) {
+  const url = `https://uk.rs-online.com/web/c/?sra=oss&r=t&searchTerm=${sku}`
+  const cached = await new Promise((resolve, reject) => {
+    redisClient.get(url, (err, response) => {
+      if (err) {
+        console.error(err)
+      }
+      resolve(response)
+    })
+  })
+  if (cached != null) {
+    return immutable.fromJS(JSON.parse(cached))
+  }
+  return runQuery(url)
 }
 
-module.exports = rateLimit(30, 1000, rs)
+module.exports = rs
