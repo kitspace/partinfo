@@ -36,7 +36,9 @@ function rs(sku) {
           .text()
           .trim()
           .replace(/-/g, '')
-        let manufacturer = $('div.keyDetailsDivLL > ul > li:nth-child(3)')
+        let manufacturer = $(
+          'div.keyDetailsDivLL > ul > li:nth-child(3) > span:nth-child(2)'
+        )
           .text()
           .trim()
 
