@@ -2,27 +2,28 @@ const immutable = require('immutable')
 const url = require('url')
 const superagent = require('superagent')
 const rateLimit = require('promise-rate-limit')
-const {ELEMENT14_API_KEYS} = require('../config')
+const redis = require('redis')
+const {ELEMENT14_API_KEYS, ELEMENT14_CACHE_TIMEOUT_S} = require('../config')
+
+const redisClient = redis.createClient()
 
 let key_select = 0
 
-function element14(name, sku) {
-  let site, currency, location, extendedLocation
-  if (name === 'Newark') {
-    site = 'www.newark.com'
-    currency = 'USD'
-    location = 'US'
-    extendedLocation = 'UK'
-  } else if (name === 'Farnell') {
-    site = 'uk.farnell.com'
-    currency = 'GBP'
-    location = 'UK'
-    extendedLocation = 'US'
-  } else {
-    throw Error(`Only Newark and Farnell supported, got ${name}`)
-  }
+const runQuery = rateLimit(1, 1000, function(sku, site) {
   const api_key = ELEMENT14_API_KEYS[key_select]
   key_select = (key_select + 1) % ELEMENT14_API_KEYS.length
+
+  let location, extendedLocation
+  if (site === 'uk.farnell.com') {
+    location = 'UK'
+    extendedLocation = 'US'
+  } else if (site === 'www.newark.com') {
+    location = 'US'
+    extendedLocation = 'UK'
+  } else {
+    throw Error(`Only Newark and Farnell supported, got ${site}`)
+  }
+
   const url = `https://api.element14.com/catalog/products?callInfo.responseDataFormat=json&term=id%3A${sku}&storeInfo.id=${site}&callInfo.apiKey=${api_key}&resultsSettings.responseGroup=inventory`
   return superagent
     .get(url)
@@ -57,6 +58,47 @@ function element14(name, sku) {
       }
       throw e
     })
+    .then(r => {
+      if (r == null) {
+        r = {}
+      }
+      const redisKey = queryToKey({sku, site})
+      redisClient.set(
+        redisKey,
+        JSON.stringify(r),
+        'EX',
+        ELEMENT14_CACHE_TIMEOUT_S
+      )
+      return r
+    })
+})
+
+async function element14(name, sku) {
+  let site
+  if (name === 'Newark') {
+    site = 'www.newark.com'
+  } else if (name === 'Farnell') {
+    site = 'uk.farnell.com'
+  } else {
+    throw Error(`Only Newark and Farnell supported, got ${name}`)
+  }
+  const cached = await new Promise((resolve, reject) => {
+    const redisKey = queryToKey({sku, site})
+    redisClient.get(redisKey, (err, response) => {
+      if (err) {
+        console.error(err)
+      }
+      resolve(response)
+    })
+  })
+  if (cached != null) {
+    return immutable.fromJS(JSON.parse(cached))
+  }
+  return runQuery(sku, site)
 }
 
-module.exports = rateLimit(1, 1000, element14)
+function queryToKey(query) {
+  return 'element14:' + query.site + '/' + query.sku
+}
+
+module.exports = element14

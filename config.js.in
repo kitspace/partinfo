@@ -6,4 +6,6 @@ module.exports = {
     // api keys for element14, sign up through https://partner.element14.com/
     // if these are not present the element14 API is not used
     ELEMENT14_API_KEYS: (process.env.ELEMENT14_API_KEYS || '').split(','),
+    //how long before the element14 cache expires in seconds
+    ELEMENT14_CACHE_TIMEOUT_S: 24 * 60 * 60, //24 hours
 }
