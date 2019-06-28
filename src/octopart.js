@@ -157,13 +157,14 @@ function cacheResponses(responses) {
       if (response.body.request.__class__ === 'SearchRequest') {
         key = queryToKey(response.body.request)
         result = JSON.stringify(response.body.results)
+        redisClient.set(key, result, 'EX', OCTOPART_CACHE_TIMEOUT_S)
       } else {
         response.body.request.queries.forEach((q, i) => {
           key = queryToKey(q)
           result = JSON.stringify(response.body.results[i])
+          redisClient.set(key, result, 'EX', OCTOPART_CACHE_TIMEOUT_S)
         })
       }
-      redisClient.set(key, result, 'EX', OCTOPART_CACHE_TIMEOUT_S)
     }
   })
   return responses
