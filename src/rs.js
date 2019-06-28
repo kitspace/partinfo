@@ -80,4 +80,4 @@ function rs(sku) {
     })
 }
 
-module.exports = rateLimit(10, 1000, rs)
+module.exports = rateLimit(30, 1000, rs)

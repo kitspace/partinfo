@@ -13,7 +13,6 @@ const OCTOPART_CACHE_TIMEOUT_S = 7 * 24 * 60 * 60 //seconds
 
 const redisClient = redis.createClient()
 
-
 const limiter = new RateLimiter({
   db: new Redis(),
   // 1000 requests in 30 days
@@ -195,39 +194,84 @@ function queryToKey(query) {
   return key
 }
 
-function resolveCached(queries) {}
+function resolveCached(queries) {
+  return Promise.all(
+    queries.map(q => {
+      const key = queryToKey(q)
+      return new Promise((resolve, reject) => {
+        redisClient.get(key, (err, response) => {
+          if (err) {
+            console.error(err)
+          }
+          response = JSON.parse(response)
+          if (response) {
+            if (response.length != null) {
+              response.map(r => Object.assign(r, {reference: q.reference}))
+            } else {
+              response.reference = q.reference
+              response = [response]
+            }
+          }
+          resolve([q, response])
+        })
+      })
+    })
+  )
+    .then(immutable.List)
+    .then(rs => rs.filter(([_, r]) => r))
+}
 
-function octopart(queries) {
+async function octopart(queries) {
   const octopart_queries = transform(queries)
+
   let search_queries = octopart_queries.filter(q => q.electro_grammar)
   search_queries = transformSearchQueries(search_queries)
-  search_queries.map(q => queryToKey(q))
-  const part_match_queries = octopart_queries.filter(q => !q.electro_grammar)
-  part_match_queries.map(q => queryToKey(q))
+  const cached_search_results = await resolveCached(search_queries)
+  search_queries = search_queries.filter(
+    q => !cached_search_results.find(([cached_query, _]) => q === cached_query)
+  )
+
+  let part_match_queries = octopart_queries.filter(q => !q.electro_grammar)
+  const cached_match_results = await resolveCached(part_match_queries)
+  part_match_queries = part_match_queries.filter(
+    q => !cached_match_results.find(([cached_query, _]) => q === cached_query)
+  )
+
   const groups = splitIntoChunks(part_match_queries, 20)
+
   return Promise.all(
     groups.concat(search_queries).map(q => run(q).then(r => [q, r]))
   )
     .then(cacheResponses)
     .then(responses =>
-      immutable.List(responses).flatMap(([q, res]) => {
-        if (res.status !== 200) {
-          console.error(res.status, queries)
-        }
-        if (!res.body || !res.body.results) {
-          return immutable.List()
-        }
-        return immutable.List(res.body.results).flatMap(result => {
-          if (result.__class__ === 'SearchResult') {
-            const [type, reference] = q.reference.split(':')
-            return [Object.assign(result.item, {reference, type})]
+      immutable
+        .List(responses)
+        .map(([q, res]) => {
+          if (res.status !== 200) {
+            console.error(res.status, queries)
           }
-          if (result.__class__ === 'PartsMatchResult') {
-            const [type, reference] = result.reference.split(':')
-            return result.items.map(i => Object.assign(i, {reference, type}))
+          if (!res.body || !res.body.results) {
+            return [q, null]
           }
+          return [q, res.body.results]
         })
-      })
+        .concat(cached_search_results)
+        .concat(cached_match_results)
+        .flatMap(([q, results]) => {
+          if (results == null) {
+            return []
+          }
+          return immutable.List(results).flatMap(result => {
+            if (result.__class__ === 'SearchResult') {
+              const [type, reference] = q.reference.split(':')
+              return [Object.assign(result.item, {reference, type})]
+            }
+            if (result.__class__ === 'PartsMatchResult') {
+              const [type, reference] = result.reference.split(':')
+              return result.items.map(i => Object.assign(i, {reference, type}))
+            }
+          })
+        })
     )
     .then(responses =>
       queries.reduce((previousResults, query) => {
