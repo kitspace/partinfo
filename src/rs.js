@@ -3,12 +3,30 @@ const immutable = require('immutable')
 const rateLimit = require('promise-rate-limit')
 const superagent = require('superagent')
 
+const redis = require('redis')
+
+// 24 hrs
+const RS_CACHE_TIMEOUT_S = 24 * 60 * 60 //seconds
+
+const redisClient = redis.createClient()
+
 const {ELEMENT14_API_KEYS} = require('../config')
 
 let key_select = 0
 
-function rs(sku) {
+async function rs(sku) {
   const url = `https://uk.rs-online.com/web/c/?sra=oss&r=t&searchTerm=${sku}`
+  const cached = await new Promise((resolve, reject) => {
+    redisClient.get(url, (err, response) => {
+      if (err) {
+        console.error(err)
+      }
+      resolve(response)
+    })
+  })
+  if (cached != null) {
+    return immutable.fromJS(JSON.parse(cached))
+  }
   return superagent
     .get(url)
     .then(r => {
@@ -76,6 +94,13 @@ function rs(sku) {
           })
           .filter(x => x != null)
       }
+    })
+    .then(r => {
+      if (r == null) {
+        r = {}
+      }
+      redisClient.set(url, JSON.stringify(r), 'EX', RS_CACHE_TIMEOUT_S)
+      return r
     })
     .catch(e => {
       throw e
