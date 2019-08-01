@@ -647,8 +647,8 @@ ee-first@1.1.1:
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
 
 "electro-grammar@git+https://github.com/kitspace/electro-grammar#dev2":
-  version "1.0.0"
-  resolved "git+https://github.com/kitspace/electro-grammar#ecc5e6f55f89ab0ca0abc0818d20f180b45bf35c"
+  version "1.1.0"
+  resolved "git+https://github.com/kitspace/electro-grammar#175fefb6e9aeb4c7c766a15745a2cb2d8e372961"
   dependencies:
     nearley "^2.15.1"
 
