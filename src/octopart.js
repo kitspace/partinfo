@@ -240,7 +240,21 @@ async function octopart(queries) {
   const groups = splitIntoChunks(part_match_queries, 20)
 
   return Promise.all(
-    groups.concat(search_queries).map(q => run(q).then(r => [q, r]))
+    groups.concat(search_queries).map(q =>
+      run(q).then(r => {
+        if (
+          q.filters &&
+          q.filters.length > 0 &&
+          (!r.body || r.body.hits === 0)
+        ) {
+          // we have a filtered (i.e. parsed by electro-grammar) response with
+          // zero hits, ignore the query string and try again
+          q.q = ''
+          return run(q).then(r => [q, r])
+        }
+        return [q, r]
+      })
+    )
   )
     .then(cacheResponses)
     .then(responses =>
