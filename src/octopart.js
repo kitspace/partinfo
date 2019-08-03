@@ -70,6 +70,7 @@ function transform(queries) {
 
 const run = rateLimit(3, 1000, async function(query) {
   const limit = await limiter.get({id: 'dev-partinfo'})
+  console.info('octopart limit', limit)
   if (limit.remaining === 0) {
     throw new Error('Octpart query limit reached.')
   }
