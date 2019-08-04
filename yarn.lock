@@ -648,7 +648,7 @@ ee-first@1.1.1:
 
 "electro-grammar@git+https://github.com/kitspace/electro-grammar#dev2":
   version "1.1.0"
-  resolved "git+https://github.com/kitspace/electro-grammar#175fefb6e9aeb4c7c766a15745a2cb2d8e372961"
+  resolved "git+https://github.com/kitspace/electro-grammar#cf2a64357580860a2674e23071d68becd3164a7a"
   dependencies:
     nearley "^2.15.1"
 
