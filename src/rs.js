@@ -55,7 +55,7 @@ const runQuery = rateLimit(30, 1000, function(url) {
 
         let multipack_quantity = $('.topPriceArea')
           .text()
-          .match(/Price \d+ .* of (\d+)/)
+          .match(/Price .* of (\d+)/)
         if (multipack_quantity != null) {
           multipack_quantity = multipack_quantity[1]
         }
