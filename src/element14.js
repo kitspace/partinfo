@@ -29,6 +29,10 @@ const runQuery = rateLimit(1, 1000, function(sku, site) {
     .get(url)
     .set('accept', 'application/json')
     .then(r => {
+      const products = r.body.premierFarnellPartNumberReturn.products
+      if (products == null || products.length == 0) {
+	      return immutable.Map()
+      }
       const p = r.body.premierFarnellPartNumberReturn.products[0]
       const mpn = {
         manufacturer: p.brandName,
