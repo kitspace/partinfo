@@ -1,15 +1,27 @@
-const cheerio = require('cheerio')
 const immutable = require('immutable')
 const rateLimit = require('promise-rate-limit')
 const superagent = require('superagent')
 const redis = require('redis')
 
-const runQuery = rateLimit(30, 1000, function(term) {
+const {createHeadless} = require('./headless')
+
+const browserPromise = createHeadless()
+
+const runQuery = rateLimit(30, 1000, async function(term) {
+  const browser = await browserPromise
   const url = 'https://lcsc.com/search?q=' + term
-  console.log({url})
-  return superagent.get(url).then(r => {
-    const $ = cheerio.load(r.text)
+  const page = await browser.newPage()
+  await page.goto(url)
+  await page.waitFor('.mfrPartItem')
+  const titles = await page.evaluate(() => {
+    const ts = document.querySelectorAll('.mfrPartItem')
+    const titles = []
+    for (const t of ts) {
+      titles.push(t.innerHTML)
+    }
+    return titles
   })
+  console.log(titles)
 })
 
 function lcsc(queries) {
