@@ -10,7 +10,7 @@ const redisClient = redis.createClient()
 
 let key_select = 0
 
-const runQuery = rateLimit(30, 1000, function(url) {
+const runQuery = rateLimit(30, 1000, function(url, sku) {
   return superagent
     .get(url)
     .then(r => {
@@ -104,7 +104,7 @@ async function rs(sku) {
   if (cached != null) {
     return immutable.fromJS(JSON.parse(cached))
   }
-  return runQuery(url)
+  return runQuery(url, sku)
 }
 
 module.exports = rs
