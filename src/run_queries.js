@@ -3,7 +3,7 @@ const immutable = require('immutable')
 
 const runRetailers = require('./retailers')
 const checkCPL = require('./check_cpl')
-const {search} = require('./search')
+const search = require('./search')
 
 const {request_bus, response_bus} = require('./message_bus')
 
