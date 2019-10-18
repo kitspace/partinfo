@@ -79,6 +79,7 @@ const resolverMap = {
       return Promise.all(parts.map(runPart))
     },
     search(_, {term}) {
+      term = term.trim()
       if (!term) {
         return []
       }
