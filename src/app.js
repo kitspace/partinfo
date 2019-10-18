@@ -5,7 +5,7 @@ const cors = require('cors')
 const schema = require('./schema')
 const config = require('../config')
 
-require('./handle_changes')
+require('./run_queries')
 
 const app = express()
 
