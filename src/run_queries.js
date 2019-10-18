@@ -1,9 +1,9 @@
 const redis = require('redis')
 const immutable = require('immutable')
 
-const octopart = require('./octopart')
 const runRetailers = require('./retailers')
 const checkCPL = require('./check_cpl')
+const {search} = require('./search')
 
 const {request_bus, response_bus} = require('./message_bus')
 
@@ -63,7 +63,7 @@ function requestNew(queries) {
   queries = queries.map(q => q.get('query'))
   console.info('requestNew', queries.toJS())
   queries = checkCPL(queries)
-  octopart(queries)
+  search(queries)
     .then(runRetailers)
     .then(results => {
       cache(results)
