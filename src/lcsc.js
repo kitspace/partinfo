@@ -13,7 +13,7 @@ const runQuery = rateLimit(30, 1000, async function(term) {
   console.log({url})
   const page = await browser.newPage()
   await page.goto(url)
-  await page.waitFor('.mfrPartItem')
+  await page.waitFor('.el-table__row')
   const parts = await page.evaluate(() => {
     let rows = document.querySelectorAll('.el-table__row')
     rows = Array.from(rows)
@@ -28,10 +28,22 @@ const runQuery = rateLimit(30, 1000, async function(term) {
       } else {
         in_stock_quantity = parseInt(in_stock_quantity.innerText, 10)
       }
-      return {part, manufacturer, in_stock_quantity}
+      let priceRows = row.querySelector('.priceItem').children
+      priceRows = Array.from(priceRows).slice(0, -1).map(priceRow => {
+        let num = priceRow.querySelector('.num')
+        if (num != null) {
+          num = parseInt(num.innerHTML, 10)
+        }
+        let price = priceRow.querySelector('.price')
+        if (price != null) {
+          price = parseFloat(price.innerHTML.slice(1))
+        }
+        return [num, price]
+      })
+      return {part, manufacturer, in_stock_quantity, priceRows}
     })
   })
-  console.log(parts)
+  console.log(JSON.stringify(parts, null, 2))
 })
 
 function lcsc(queries) {
