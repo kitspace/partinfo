@@ -15,11 +15,7 @@ const runQuery = rateLimit(30, 1000, async function(term) {
   await page.waitFor('.mfrPartItem')
   const titles = await page.evaluate(() => {
     const ts = document.querySelectorAll('.mfrPartItem')
-    const titles = []
-    for (const t of ts) {
-      titles.push(t.innerHTML)
-    }
-    return titles
+    return Array.from(ts).map(t => t.innerHTML)
   })
   console.log(titles)
 })
