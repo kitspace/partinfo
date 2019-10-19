@@ -36,6 +36,10 @@ const runQuery = rateLimit(30, 1000, async function(term) {
         }
         let price = priceRow.querySelector('.price')
         if (price != null) {
+          // select reduced price if it's there
+          if (price.querySelector('.price-red') != null) {
+            price = price.querySelector('.price-red')
+          }
           price = parseFloat(price.innerHTML.slice(1))
         }
         return [num, price]
