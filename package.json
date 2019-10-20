@@ -21,7 +21,6 @@
     "immutable": "^3.8.1",
     "ioredis": "^4.10.0",
     "promise-rate-limit": "^0.0.1",
-    "puppeteer": "^1.20.0",
     "redis": "^2.8.0",
     "superagent": "^3.4.3"
   },
