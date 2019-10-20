@@ -13,7 +13,7 @@ const Sku = `{
     part   : String!
 }`
 
-const schema = `
+const typeDefs = `
   type Mpn ${Mpn}
   input MpnInput ${Mpn}
 
@@ -71,31 +71,7 @@ const schema = `
   }
 `
 
-function getFields(info) {
-  let fields = graphqlFields(info, {}, {processArguments: true})
-
-  // only keep things that will actually change partinfo behaviour
-  fields = immutable
-    .fromJS(fields)
-    .filter((_, k) => k === 'offers')
-    .update(
-      'offers',
-      offers => offers && offers.filter((_, k) => k === '__arguments')
-    )
-    .filter(offers => offers.size > 0)
-
-  // coerce and sort to help caching
-  // XXX needs to be updated if more arguments are added
-  fields = fields.updateIn(
-    ['offers', '__arguments', 0, 'from', 'value'],
-    from =>
-      from && (typeof from === 'string' ? immutable.List.of(from) : from.sort())
-  )
-
-  return fields
-}
-
-const resolverMap = {
+const resolvers = {
   Query: {
     part(_, {mpn, sku}, __, info) {
       const fields = getFields(info)
@@ -162,7 +138,28 @@ function run(query) {
   })
 }
 
-module.exports = graphqlTools.makeExecutableSchema({
-  typeDefs: schema,
-  resolvers: resolverMap,
-})
+function getFields(info) {
+  let fields = graphqlFields(info, {}, {processArguments: true})
+
+  // only keep things that will actually change partinfo behaviour
+  fields = immutable
+    .fromJS(fields)
+    .filter((_, k) => k === 'offers')
+    .update(
+      'offers',
+      offers => offers && offers.filter((_, k) => k === '__arguments')
+    )
+    .filter(offers => offers.size > 0)
+
+  // coerce and sort to help caching
+  // XXX needs to be updated if more arguments are added
+  fields = fields.updateIn(
+    ['offers', '__arguments', 0, 'from', 'value'],
+    from =>
+      from && (typeof from === 'string' ? immutable.List.of(from) : from.sort())
+  )
+
+  return fields
+}
+
+module.exports = graphqlTools.makeExecutableSchema({typeDefs, resolvers})
