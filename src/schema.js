@@ -1,4 +1,5 @@
 const immutable = require('immutable')
+const graphqlFields = require('graphql-fields')
 const graphqlTools = require('graphql-tools')
 const {request_bus, response_bus} = require('./message_bus')
 
@@ -32,9 +33,9 @@ const schema = `
      image       : Image
      datasheet   : String
      description : String
-     offers      : [Offer]
      specs       : [Spec]
      type        : String
+     offers(from: [String]) : [Offer]
   }
 
   type Offer {
@@ -70,25 +71,50 @@ const schema = `
   }
 `
 
+function getFields(info) {
+  let fields = graphqlFields(info, {}, {processArguments: true})
+  // only keep things that will actually change partinfo behaviour
+  fields = immutable
+    .fromJS(fields)
+    .filter((_, k) => k === 'offers')
+    .update(
+      'offers',
+      offers => offers && offers.filter((_, k) => k === '__arguments')
+    )
+    .filter(offers => offers.size > 0)
+
+  // sort to help caching
+  // XXX needs to be updated if more arguments are added
+  fields = fields.updateIn(
+    ['offers', '__arguments', 0, 'from', 'value'], 
+    from => from && from.sort()
+  )
+
+  return fields
+}
+
 const resolverMap = {
   Query: {
-    part(_, {mpn, sku}) {
-      return runPart({mpn, sku})
+    part(_, {mpn, sku}, __, info) {
+      const fields = getFields(info)
+      return runPart({mpn, sku, fields})
     },
-    match(_, {parts}) {
-      return Promise.all(parts.map(runPart))
+    match(_, {parts}, __, info) {
+      const fields = getFields(info)
+      return Promise.all(parts.map(part => runPart({fields, ...part})))
     },
-    search(_, {term}) {
+    search(_, {term}, __, info) {
+      const fields = getFields(info)
       term = term.trim()
       if (!term) {
         return []
       }
-      return run({term})
+      return run({term, fields})
     },
   },
 }
 
-function runPart({mpn, sku}) {
+function runPart({mpn, sku, fields}) {
   console.info(
     `got request for ${(mpn && JSON.stringify(mpn)) ||
       (sku && JSON.stringify(sku))}`
@@ -99,7 +125,7 @@ function runPart({mpn, sku}) {
   if (sku && sku.vendor !== 'Digikey') {
     sku.part = sku.part.replace(/-/g, '')
   }
-  return run({mpn, sku})
+  return run({mpn, sku, fields})
 }
 
 function makeId() {

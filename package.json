@@ -16,6 +16,7 @@
     "express-graphql": "^0.6.3",
     "forever": "^0.15.3",
     "graphql": "^0.9.1",
+    "graphql-fields": "^2.0.3",
     "graphql-tools": "^0.10.0",
     "immutable": "^3.8.1",
     "ioredis": "^4.10.0",
