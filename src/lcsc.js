@@ -3,51 +3,21 @@ const rateLimit = require('promise-rate-limit')
 const superagent = require('superagent')
 const redis = require('redis')
 
-const {createHeadless} = require('./headless')
-
-const browserPromise = createHeadless()
-
 const runQuery = rateLimit(30, 1000, async function(term) {
-  const browser = await browserPromise
-  const url = 'https://lcsc.com/search?q=' + term
-  console.log({url})
-  const page = await browser.newPage()
-  await page.goto(url)
-  await page.waitFor('.el-table__row')
-  const parts = await page.evaluate(() => {
-    let rows = document.querySelectorAll('.el-table__row')
-    rows = Array.from(rows)
-    // the rows seem to be copied 3 times, we discard a third
-    rows = rows.slice(0, rows.length / 3)
-    return rows.map(row => {
-      const part = row.querySelector('.mfrPartItem > a').innerText
-      const manufacturer = row.querySelector('.manufacturerItem > a').innerText
-      let in_stock_quantity = row.querySelector('.stockItem > a > .text-num')
-      if (in_stock_quantity == null) {
-        in_stock_quantity = 0
-      } else {
-        in_stock_quantity = parseInt(in_stock_quantity.innerText, 10)
+  const url = 'https://lcsc.com/api/global/search'
+  return superagent
+    .post(url)
+    .type('form')
+    .query('q=' + term)
+    .send({page: 1, order: ''})
+    .accept('application/json')
+    .then(r => {
+      if (r.status !== 200) {
+        console.error(r.status)
       }
-      let priceRows = row.querySelector('.priceItem').children
-      priceRows = Array.from(priceRows).slice(0, -1).map(priceRow => {
-        let num = priceRow.querySelector('.num')
-        if (num != null) {
-          num = parseInt(num.innerHTML, 10)
-        }
-        let price = priceRow.querySelector('.price')
-        if (price != null) {
-          // select reduced price if it's there
-          if (price.querySelector('.price-red') != null) {
-            price = price.querySelector('.price-red')
-          }
-          price = parseFloat(price.innerHTML.slice(1))
-        }
-        return [num, price]
-      })
-      return {part, manufacturer, in_stock_quantity, priceRows}
+      const result = r.body.result
+      console.log(JSON.stringify(result, null, 2))
     })
-  })
-  console.log(JSON.stringify(parts, null, 2))
 })
 
 function lcsc(queries) {
