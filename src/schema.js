@@ -73,6 +73,7 @@ const schema = `
 
 function getFields(info) {
   let fields = graphqlFields(info, {}, {processArguments: true})
+
   // only keep things that will actually change partinfo behaviour
   fields = immutable
     .fromJS(fields)
@@ -83,11 +84,12 @@ function getFields(info) {
     )
     .filter(offers => offers.size > 0)
 
-  // sort to help caching
+  // coerce and sort to help caching
   // XXX needs to be updated if more arguments are added
   fields = fields.updateIn(
-    ['offers', '__arguments', 0, 'from', 'value'], 
-    from => from && from.sort()
+    ['offers', '__arguments', 0, 'from', 'value'],
+    from =>
+      from && (typeof from === 'string' ? immutable.List.of(from) : from.sort())
   )
 
   return fields
