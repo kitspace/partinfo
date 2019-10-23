@@ -85,6 +85,51 @@ describe('from Mpn', () => {
       return done()
     })
   })
+  it('filters offers array', () => {
+    return test(`{
+       part(mpn:{manufacturer:"Texas Instruments" part:"NE555P"}) {
+         offers(from: "Digikey") {
+           sku {
+             vendor
+             part
+           }
+         }
+       }
+    }`).then(response => {
+      assert(response.success, 'response failed')
+      assert(response.status === 200, 'status is not 200')
+      assert(response.data.part != null, 'part data not returned')
+      assert(response.data.part.offers != null, 'offers is null')
+      assert(response.data.part.offers.length > 0, 'offers is empty')
+      response.data.part.offers.forEach(offer => {
+        assert(offer.sku.vendor === 'Digikey', 'not from Digikey')
+      })
+    })
+  })
+  it('filters offers array from multiple', () => {
+    return test(`{
+       part(mpn:{manufacturer:"Texas Instruments" part:"NE555P"}) {
+         offers(from: ["Digikey", "Mouser"]) {
+           sku {
+             vendor
+             part
+           }
+         }
+       }
+    }`).then(response => {
+      assert(response.success, 'response failed')
+      assert(response.status === 200, 'status is not 200')
+      assert(response.data.part != null, 'part data not returned')
+      assert(response.data.part.offers != null, 'offers is null')
+      assert(response.data.part.offers.length > 0, 'offers is empty')
+      const vendors = response.data.part.offers.map(offer => offer.sku.vendor)
+      assert(vendors.includes('Mouser'), 'does not include Mouser')
+      assert(vendors.includes('Digikey'), 'does not include Digikey')
+      vendors.forEach(vendor => {
+        assert(vendor === 'Digikey' || vendor === 'Mouser', 'not from Mouser or Digikey')
+      })
+    })
+  })
 })
 
 describe('from Sku', () => {
