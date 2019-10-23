@@ -340,7 +340,7 @@ async function octopart(queries) {
           ]) || default_retailers
         const filterOffers = part =>
           part.update('offers', offers =>
-            offers.filter(o => retailers.includes(o.getIn(['sku', 'vendor'])))
+            offers && offers.filter(o => retailers.includes(o.getIn(['sku', 'vendor'])))
           )
         if (immutable.List.isList(response)) {
           return response.map(filterOffers)
