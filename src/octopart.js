@@ -29,7 +29,7 @@ const retailer_map = immutable.OrderedMap({
 })
 
 const retailer_reverse_map = retailer_map.mapEntries(([k, v]) => [v, k])
-const retailers_used = immutable.Set.fromKeys(retailer_map)
+const default_retailers = immutable.Set.fromKeys(retailer_map)
 
 function transform(queries) {
   return flatten(
@@ -326,6 +326,28 @@ async function octopart(queries) {
         return previousResults.set(query, response)
       }, immutable.Map())
     )
+    .then(responses =>
+      responses.map((response, query) => {
+        // filter out according to 'from' argument of offers
+        const retailers =
+          query.getIn([
+            'fields',
+            'offers',
+            '__arguments',
+            0, //XXX needs to be udpated if more arguments are added
+            'from',
+            'value',
+          ]) || default_retailers
+        const filterOffers = part =>
+          part.update('offers', offers =>
+            offers.filter(o => retailers.includes(o.getIn(['sku', 'vendor'])))
+          )
+        if (immutable.List.isList(response)) {
+          return response.map(filterOffers)
+        }
+        return filterOffers(response)
+      })
+    )
 }
 
 const specImportance = immutable.fromJS([
@@ -474,27 +496,24 @@ function datasheet(item) {
 }
 
 function offers(item) {
-  const offers = immutable
-    .Set(item.offers)
-    .filter(o => retailers_used.includes(o.seller.name))
-    .map(offer => {
-      const vendor = retailer_map.get(offer.seller.name)
-      let part = offer.sku || ''
-      if (vendor !== 'Digikey') {
-        part = part.replace(/-/g, '')
-      }
-      return immutable.fromJS({
-        sku: {
-          part,
-          vendor,
-        },
-        prices: offer.prices,
-        in_stock_quantity: offer.in_stock_quantity,
-        multipack_quantity: offer.multipack_quantity,
-        moq: offer.moq,
-        product_url: offer.product_url.replace(apikey, ''),
-      })
+  const offers = immutable.Set(item.offers).map(offer => {
+    const vendor = retailer_map.get(offer.seller.name) || offer.seller.name
+    let part = offer.sku || ''
+    if (vendor !== 'Digikey') {
+      part = part.replace(/-/g, '')
+    }
+    return immutable.fromJS({
+      sku: {
+        part,
+        vendor,
+      },
+      prices: offer.prices,
+      in_stock_quantity: offer.in_stock_quantity,
+      multipack_quantity: offer.multipack_quantity,
+      moq: offer.moq,
+      product_url: offer.product_url.replace(apikey, ''),
     })
+  })
   return mergeOffers(offers)
 }
 

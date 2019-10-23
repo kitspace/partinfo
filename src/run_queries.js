@@ -40,6 +40,7 @@ function resolveCached(queries) {
     q =>
       new Promise((resolve, reject) => {
         const key = queryToKey(q.get('query'))
+        console.log({key})
         redisClient.get(key, (err, response) => {
           if (err) {
             console.error(err)
