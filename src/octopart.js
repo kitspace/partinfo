@@ -29,7 +29,7 @@ const retailer_map = immutable.OrderedMap({
 })
 
 const retailer_reverse_map = retailer_map.mapEntries(([k, v]) => [v, k])
-const default_retailers = immutable.Set.fromKeys(retailer_map)
+const default_retailers = immutable.Set.fromKeys(retailer_reverse_map)
 
 function transform(queries) {
   return flatten(
