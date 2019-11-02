@@ -44,6 +44,7 @@ async function searchAcrossCurrencies(query, currencies) {
   ).then(rs => immutable.List(rs).flatten(1))
   return responses
     .reduce((merged, result) => {
+      // merge the prices that are in different currencies
       result = processResult(result)
       const sku = result.get('sku')
       const existing = merged.findIndex(r => r.get('sku').equals(sku))
@@ -56,30 +57,27 @@ async function searchAcrossCurrencies(query, currencies) {
       return merged
     }, immutable.List())
     .reduce((merged, result) => {
+      // merge the different offers for the same MPN
       const mpn = result.get('mpn')
-      const sku = result.get('sku')
-      const prices = result.get('prices')
-      result = immutable.fromJS({
-        mpn,
-        offers: [{sku, prices}],
-      })
+      const offers = immutable.List.of(result.remove('mpn'))
       const existing = merged.findIndex(r => r.get('mpn').equals(mpn))
       if (existing >= 0) {
-        merged = merged.updateIn([existing, 'offers', 'prices'], p =>
-          p.concat(prices)
-        )
+        merged = merged.updateIn([existing, 'offers'], os => os.concat(offers))
       } else {
-        merged = merged.push(result)
+        merged = merged.push(immutable.Map({mpn, offers}))
       }
       return merged
     }, immutable.List())
 }
 
 function processResult(result) {
+  console.log(JSON.stringify(result, null, 2))
   const mpn = getMpn(result)
   const sku = getSku(result)
   const prices = getPrices(result)
-  return immutable.fromJS({mpn, sku, prices})
+  const description = result.get('description')
+  const moq = result.getIn(['info', 'min'])
+  return immutable.fromJS({mpn, sku, prices, description, moq})
 }
 
 const symbol_to_currency = immutable.Map({
@@ -131,7 +129,7 @@ function lcsc(queries) {
       } else if (mpn != null) {
         const s = (mpn.get('manufacturer') + ' ' + mpn.get('part')).trim()
         response = await searchAcrossCurrencies(s, currencies)
-        console.log(JSON.stringify(response, null, 2))
+        //console.log(JSON.stringify(response, null, 2))
       } else if (is_lcsc_sku) {
         response = await searchAcrossCurrencies(sku.get('part'), currencies)
       }
