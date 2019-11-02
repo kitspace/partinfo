@@ -24,9 +24,18 @@ function getRetailers(query) {
   )
 }
 
+function getCurrencies(query) {
+  const prices = query.getIn(['fields', 'offers', 'prices'])
+  if (prices == null) {
+    return immutable.Seq()
+  }
+  return prices.keySeq()
+}
+
 module.exports = {
   retailer_map,
   retailer_reverse_map,
   default_retailers,
   getRetailers,
+  getCurrencies,
 }

@@ -138,6 +138,8 @@ function run(query) {
   })
 }
 
+const offerFields = immutable.List.of('prices', '__arguments')
+
 function getFields(info) {
   let fields = graphqlFields(info, {}, {processArguments: true})
 
@@ -147,7 +149,7 @@ function getFields(info) {
     .filter((_, k) => k === 'offers')
     .update(
       'offers',
-      offers => offers && offers.filter((_, k) => k === '__arguments')
+      offers => offers && offers.filter((_, k) => offerFields.includes(k))
     )
     .filter(offers => offers.size > 0)
 
