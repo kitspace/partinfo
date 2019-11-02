@@ -8,6 +8,8 @@ const RateLimiter = require('async-ratelimiter')
 const Redis = require('ioredis')
 const redis = require('redis')
 
+const {retailer_map, retailer_reverse_map, getRetailers} = require('./queries')
+
 const {OCTOPART_CACHE_TIMEOUT_S} = require('../config')
 
 const redisClient = redis.createClient()
@@ -18,18 +20,6 @@ const limiter = new RateLimiter({
   max: 1000,
   duration: 30 * 24 * 60 * 60 * 1000, // milliseconds
 })
-
-const retailer_map = immutable.OrderedMap({
-  'Digi-Key': 'Digikey',
-  Mouser: 'Mouser',
-  'RS Components': 'RS',
-  Newark: 'Newark',
-  'element14 APAC': 'Farnell',
-  Farnell: 'Farnell',
-})
-
-const retailer_reverse_map = retailer_map.mapEntries(([k, v]) => [v, k])
-const default_retailers = immutable.Set.fromKeys(retailer_reverse_map)
 
 function transform(queries) {
   return flatten(
@@ -329,15 +319,7 @@ async function octopart(queries) {
     .then(responses =>
       responses.map((response, query) => {
         // filter out according to 'from' argument of offers
-        const retailers =
-          query.getIn([
-            'fields',
-            'offers',
-            '__arguments',
-            0, //XXX needs to be udpated if more arguments are added
-            'from',
-            'value',
-          ]) || default_retailers
+        const retailers = getRetailers(query)
         const filterOffers = part =>
           part.update('offers', offers =>
             offers && offers.filter(o => retailers.includes(o.getIn(['sku', 'vendor'])))
