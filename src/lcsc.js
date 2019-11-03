@@ -104,7 +104,8 @@ async function searchAcrossCurrencies(query, currencies) {
         merged = merged.updateIn([existing, 'offers'], os => os.concat(offers))
       } else {
         const datasheet = result.get('datasheet')
-        merged = merged.push(immutable.Map({mpn, datasheet, offers}))
+        const description = result.get('description')
+        merged = merged.push(immutable.Map({mpn, datasheet, description, offers}))
       }
       return merged
     }, immutable.List())
