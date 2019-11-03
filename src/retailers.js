@@ -37,6 +37,9 @@ function runRetailers(results) {
 }
 
 function run(query, part) {
+  if (part == null) {
+    return Promise.resolve(null)
+  }
   let offers = part.get('offers') || immutable.List()
   const query_sku = query.get('sku')
   if (

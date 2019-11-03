@@ -65,8 +65,8 @@ const skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
 })
 
 async function searchAcrossCurrencies(query, currencies) {
-  if (currencies.length === 0) {
-    currencies = immutable.Seq.of('USD')
+  if (currencies == null || currencies.size === 0) {
+    currencies = immutable.List.of('USD')
   }
   const responses = await Promise.all(
     currencies.map(c => search(query, c))
@@ -170,7 +170,6 @@ function lcsc(queries) {
       } else if (is_lcsc_sku) {
         response = await skuMatch(sku.get('part'), currencies)
       }
-      console.log(JSON.stringify(response, null, 2))
       return [q, response]
     })
   ).then(immutable.Map)
