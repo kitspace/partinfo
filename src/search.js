@@ -83,7 +83,9 @@ function merge(octopart_responses, lcsc_responses) {
           p.get('mpn').equals(part.get('mpn'))
         )
         if (lcsc_part != null && lcsc_part.get('offers')) {
-          remaining_lcsc = remaining_lcsc.remove(query)
+          remaining_lcsc = remaining_lcsc.update(query, r =>
+            r.filterNot(p => p.get('mpn').equals(part.get('mpn')))
+          )
           // overwrite octopart offer data with the more up-to-date better data from lcsc
           const lcsc_offers = lcsc_part.get('offers')
           const lcsc_skus = lcsc_offers.map(o => o.get('sku'))

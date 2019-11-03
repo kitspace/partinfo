@@ -26,6 +26,14 @@ const symbol_to_currency = immutable.Map({
 
 const supported_currencies = currency_cookies.keySeq()
 
+const manufacturer_map = immutable.Map({
+  'Vishay Intertech': 'Vishay',
+  YAGEO: 'Yageo',
+  'Microchip Tech': 'Microchip',
+  'METZ CONNECT GmbH': 'Metz Connect',
+  RALEC: 'Ralec',
+})
+
 const search = rateLimit(80, 1000, async function(term, currency) {
   const url = 'https://lcsc.com/api/global/search'
   return superagent
@@ -55,13 +63,15 @@ const skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
       return searchAcrossCurrencies(manufacturer + ' ' + part, currencies)
     })
     .then(parts =>
-      immutable.List.of(parts.find(part => {
-        const offer = part
-          .get('offers')
-          .find(o => o.getIn(['sku', 'part']) === sku)
-        return offer != null
-      })
-    ))
+      immutable.List.of(
+        parts.find(part => {
+          const offer = part
+            .get('offers')
+            .find(o => o.getIn(['sku', 'part']) === sku)
+          return offer != null
+        })
+      )
+    )
 })
 
 async function searchAcrossCurrencies(query, currencies) {
@@ -137,16 +147,18 @@ function getSku(result) {
 }
 
 function getMpn(result) {
-  return immutable.Map({
-    part: result
-      .getIn(['info', 'number'])
-      .replace(/<.*?>/g, '')
-      .trim(),
-    manufacturer: result
-      .getIn(['manufacturer', 'en'])
-      .replace(/<.*?>/g, '')
-      .trim(),
-  })
+  let manufacturer = result
+    .getIn(['manufacturer', 'en'])
+    .replace(/<.*?>/g, '')
+    .trim()
+   manufacturer = manufacturer_map.get(manufacturer) || manufacturer
+
+  const part = result
+    .getIn(['info', 'number'])
+    .replace(/<.*?>/g, '')
+    .trim()
+
+  return immutable.Map({part, manufacturer})
 }
 
 function lcsc(queries) {
