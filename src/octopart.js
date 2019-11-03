@@ -481,6 +481,7 @@ function offers(item) {
       prices: offer.prices,
       in_stock_quantity: offer.in_stock_quantity,
       multipack_quantity: offer.multipack_quantity,
+      order_multiple: offer.order_multiple,
       moq: offer.moq,
       product_url: offer.product_url.replace(apikey, ''),
     })

@@ -48,6 +48,7 @@ const typeDefs = `
     stock_location     : String
     moq                : Int
     multipack_quantity : Int
+    order_multiple     : Int
     product_url        : String
   }
 
