@@ -55,13 +55,13 @@ const skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
       return searchAcrossCurrencies(manufacturer + ' ' + part, currencies)
     })
     .then(parts =>
-      parts.find(part => {
+      immutable.List.of(parts.find(part => {
         const offer = part
           .get('offers')
           .find(o => o.getIn(['sku', 'part']) === sku)
         return offer != null
       })
-    )
+    ))
 })
 
 async function searchAcrossCurrencies(query, currencies) {
@@ -152,6 +152,7 @@ function getMpn(result) {
 function lcsc(queries) {
   return Promise.all(
     queries.map(async q => {
+      const empty = immutable.List()
       const currencies = getCurrencies(q)
       const retailers = getRetailers(q)
       const term = q.get('term')
@@ -159,7 +160,7 @@ function lcsc(queries) {
       const sku = q.get('sku')
       const is_lcsc_sku = sku != null && sku.get('vendor') === 'LCSC'
       if (!retailers.includes('LCSC') && !is_lcsc_sku) {
-        return [q, null]
+        return [q, empty]
       }
       let response
       if (term != null) {
