@@ -28,10 +28,71 @@ const supported_currencies = currency_cookies.keySeq()
 
 const manufacturer_map = immutable.Map({
   'Vishay Intertech': 'Vishay',
-  YAGEO: 'Yageo',
   'Microchip Tech': 'Microchip',
   'METZ CONNECT GmbH': 'Metz Connect',
   RALEC: 'Ralec',
+  '3L COIL': '3L',
+  '3PEAK': '3Peak',
+  'ACTIVE-SEMI': 'Active-Semi',
+  AKER: 'Aker',
+  'Allwinner Tech': 'Allwinner Technology',
+  BOURNS: 'Bourns',
+  BUSSMANN: 'Bussmann',
+  CHAMPION: 'Champion',
+  CONQUER: 'Conquer',
+  CREE: 'Cree',
+  DAVICOM: 'Davicom',
+  DecaWave: 'Decawave',
+  '(DIOTEC)': 'Diotec',
+  EATON: 'Eaton',
+  ELNA: 'Elna',
+  EMTEK: 'Emtek',
+  FLUKE: 'Fluke',
+  FOXCONN: 'Foxconn',
+  FUJITSU: 'Fujitsu',
+  'Global Mixed-mode Tech': 'Global Mixed-Mode Technology',
+  'HALO ELECTRONICS': 'HALO Electronics',
+  HARVATEK: 'Harvatek',
+  HUAWEI: 'Huawei',
+  IDEC: 'Idec',
+  'Integrated Device Tech': 'Integrated Device Technology',
+  INTEL: 'Intel',
+  JUSHUO: 'Jushuo',
+  KAMAYA: 'Kamaya',
+  'Linear Tech': 'Linear Technology',
+  MEMSIC: 'Memsic',
+  MOLEX: 'Molex',
+  'Nanya Tech': 'Nanya Technology',
+  NISSEI: 'Nissei',
+  NUTECH: 'Nutech',
+  'OmniVision Technologies': 'Omnivision Technologies',
+  OPTEK: 'Optek',
+  PANASONIC: 'Panasonic',
+  PINREX: 'Pinrex',
+  'POWER INTEGRATIONS': 'Power Integrations',
+  'Princeton Tech': 'Princeton Technology',
+  'Prolific Tech': 'Prolific Technology',
+  'ProTek Devices': 'Protek Devices',
+  RALEC: 'Ralec',
+  RENESAS: 'Renesas',
+  RIGOL: 'Rigol',
+  ROQANG: 'Roqang',
+  SCHURTER: 'Schurter',
+  SEMTECH: 'Semtech',
+  SHINYEI: 'Shinyei',
+  SIEMENS: 'Siemens',
+  'SILICON LABS': 'Silicon Labs',
+  SIWARD: 'Siward',
+  SPANSION: 'Spansion',
+  SUSUMU: 'Susumu',
+  TAKAMISAWA: 'Takamisawa',
+  'TANCAP Tech': 'Tancap Technology',
+  TOSHIBA: 'Toshiba',
+  WIZNET: 'WIZnet',
+  '(Weltrend)': 'Weltrend',
+  'XIAMEN FARATRONIC': 'Xiamen Faratronic',
+  XILINX: 'Xilinx',
+  YAGEO: 'Yageo',
 })
 
 const search = rateLimit(80, 1000, async function(term, currency) {
@@ -105,7 +166,9 @@ async function searchAcrossCurrencies(query, currencies) {
       } else {
         const datasheet = result.get('datasheet')
         const description = result.get('description')
-        merged = merged.push(immutable.Map({mpn, datasheet, description, offers}))
+        merged = merged.push(
+          immutable.Map({mpn, datasheet, description, offers})
+        )
       }
       return merged
     }, immutable.List())
@@ -156,7 +219,7 @@ function getMpn(result) {
     .getIn(['manufacturer', 'en'])
     .replace(/<.*?>/g, '')
     .trim()
-   manufacturer = manufacturer_map.get(manufacturer) || manufacturer
+  manufacturer = manufacturer_map.get(manufacturer) || manufacturer
 
   const part = result
     .getIn(['info', 'number'])
