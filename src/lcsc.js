@@ -2,6 +2,7 @@ const immutable = require('immutable')
 const rateLimit = require('promise-rate-limit')
 const superagent = require('superagent')
 const redis = require('redis')
+const cheerio = require('cheerio')
 
 const {getRetailers, getCurrencies} = require('./queries')
 
@@ -18,7 +19,7 @@ const currency_cookies = immutable.Map({
 
 const supported_currencies = currency_cookies.keySeq()
 
-const runQuery = rateLimit(30, 1000, async function(term, currency) {
+const search = rateLimit(80, 1000, async function(term, currency) {
   const url = 'https://lcsc.com/api/global/search'
   return superagent
     .post(url)
@@ -28,6 +29,7 @@ const runQuery = rateLimit(30, 1000, async function(term, currency) {
     .accept('application/json')
     .set('cookie', currency_cookies.get(currency))
     .then(r => {
+      console.info('x-ratelimit-remaining', r.header['x-ratelimit-remaining'])
       if (r.status !== 200) {
         console.error(r.status)
       }
@@ -35,12 +37,32 @@ const runQuery = rateLimit(30, 1000, async function(term, currency) {
     })
 })
 
+const skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
+  const url = 'https://lcsc.com/pre_search/link?type=lcsc&&value=' + sku
+  return superagent
+    .get(url)
+    .then(r => {
+      const $ = cheerio.load(r.text)
+      const part = $('.detail-mpn-title').text()
+      const manufacturer = $('.detail-brand-title').text()
+      return searchAcrossCurrencies(manufacturer + ' ' + part, currencies)
+    })
+    .then(parts =>
+      parts.find(part => {
+        const offer = part
+          .get('offers')
+          .find(o => o.getIn(['sku', 'part']) === sku)
+        return offer != null
+      })
+    )
+})
+
 async function searchAcrossCurrencies(query, currencies) {
   if (currencies.length === 0) {
     currencies = immutable.Seq.of('USD')
   }
   const responses = await Promise.all(
-    currencies.map(c => runQuery(query, c))
+    currencies.map(c => search(query, c))
   ).then(rs => immutable.List(rs).flatten(1))
   return responses
     .reduce((merged, result) => {
@@ -71,7 +93,6 @@ async function searchAcrossCurrencies(query, currencies) {
 }
 
 function processResult(result) {
-  console.log(JSON.stringify(result, null, 2))
   const mpn = getMpn(result)
   const sku = getSku(result)
   const prices = getPrices(result)
@@ -107,7 +128,10 @@ function getMpn(result) {
       .getIn(['info', 'number'])
       .replace(/<.*?>/g, '')
       .trim(),
-    manufacturer: result.getIn(['manufacturer', 'en']),
+    manufacturer: result
+      .getIn(['manufacturer', 'en'])
+      .replace(/<.*?>/g, '')
+      .trim(),
   })
 }
 
@@ -129,10 +153,10 @@ function lcsc(queries) {
       } else if (mpn != null) {
         const s = (mpn.get('manufacturer') + ' ' + mpn.get('part')).trim()
         response = await searchAcrossCurrencies(s, currencies)
-        //console.log(JSON.stringify(response, null, 2))
       } else if (is_lcsc_sku) {
-        response = await searchAcrossCurrencies(sku.get('part'), currencies)
+        response = await skuMatch(sku.get('part'), currencies)
       }
+      console.log(JSON.stringify(response, null, 2))
       return [q, response]
     })
   ).then(immutable.Map)
