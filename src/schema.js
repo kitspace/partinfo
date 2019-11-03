@@ -123,7 +123,7 @@ function run(query) {
     response_bus.once(id, r => {
       if (query.get('term')) {
         r = r.filter(x => x).filter(x => x.get('mpn'))
-      } else if (!r.get('mpn')) {
+      } else if (r == null || !r.get('mpn')) {
         return resolve()
       }
       console.info(
