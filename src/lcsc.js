@@ -17,6 +17,13 @@ const currency_cookies = immutable.Map({
     'currency=eyJpdiI6InQ3cnVJXC83Z1JYbzFPS214dTZDXC9NQT09IiwidmFsdWUiOiJvczFRNWt5dFBneDFKRzlPZ3ljUENYTnlnNndnUHd2Z1wvMDQ3SUdpcE9OYUI2TDN0dEE3K0dGUWpcL1pBUFdZSE9RM05EWlNzV3l1TXVBOEpmZFRZT3Z6MG54amE5YVJsS1BhMHV0V2s5NjZlUVFQS3dEbmE4dVJiNHpGaVh1Sk1oU2NnVlluSEZqK3hHa0J3Rlp6Z0VPQT09IiwibWFjIjoiMzI5ZDJlMjJkMDUzOTJiMzg3YzUxZThkNmY2OTMxNjQzZTdlOTdlNzEwNDBmOTYyMDdkZTZjODRmNGI0Nzc0YiJ9',
 })
 
+const symbol_to_currency = immutable.Map({
+  US$: 'USD',
+  '€': 'EUR',
+  '£': 'GBP',
+  S$: 'SGD',
+})
+
 const supported_currencies = currency_cookies.keySeq()
 
 const search = rateLimit(80, 1000, async function(term, currency) {
@@ -81,32 +88,39 @@ async function searchAcrossCurrencies(query, currencies) {
     .reduce((merged, result) => {
       // merge the different offers for the same MPN
       const mpn = result.get('mpn')
-      const offers = immutable.List.of(result.remove('mpn'))
+      const offers = immutable.List.of(result.remove('mpn').remove('datasheet'))
       const existing = merged.findIndex(r => r.get('mpn').equals(mpn))
       if (existing >= 0) {
         merged = merged.updateIn([existing, 'offers'], os => os.concat(offers))
       } else {
-        merged = merged.push(immutable.Map({mpn, offers}))
+        const datasheet = result.get('datasheet')
+        merged = merged.push(immutable.Map({mpn, datasheet, offers}))
       }
       return merged
     }, immutable.List())
 }
-
 function processResult(result) {
+  console.log(JSON.stringify(result, null, 2))
   const mpn = getMpn(result)
+  const datasheet = result.getIn(['datasheet', 'pdf'])
   const sku = getSku(result)
   const prices = getPrices(result)
-  const description = result.get('description')
+  const description = result
+    .get('description')
+    .replace(/<.*?>/g, '')
+    .trim()
+  const in_stock_quantity = result.get('stock')
   const moq = result.getIn(['info', 'min'])
-  return immutable.fromJS({mpn, sku, prices, description, moq})
+  return immutable.fromJS({
+    mpn,
+    datasheet,
+    sku,
+    prices,
+    description,
+    in_stock_quantity,
+    moq,
+  })
 }
-
-const symbol_to_currency = immutable.Map({
-  US$: 'USD',
-  '€': 'EUR',
-  '£': 'GBP',
-  S$: 'SGD',
-})
 
 function getPrices(result) {
   const lcsc_prices = result.get('price')
