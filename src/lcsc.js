@@ -122,6 +122,8 @@ function processResult(result) {
     .trim()
   const in_stock_quantity = result.get('stock')
   const moq = result.getIn(['info', 'min'])
+  const order_multiple = result.getIn(['info', 'step'])
+  const product_url = 'https://lcsc.com' + result.get('url')
   return immutable.fromJS({
     mpn,
     datasheet,
@@ -130,6 +132,8 @@ function processResult(result) {
     description,
     in_stock_quantity,
     moq,
+    order_multiple,
+    product_url,
   })
 }
 
