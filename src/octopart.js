@@ -8,7 +8,7 @@ const RateLimiter = require('async-ratelimiter')
 const Redis = require('ioredis')
 const redis = require('redis')
 
-const {retailer_map, retailer_reverse_map, getRetailers} = require('./queries')
+const {retailer_map, retailer_reverse_map} = require('./queries')
 
 const {OCTOPART_CACHE_TIMEOUT_S} = require('../config')
 
@@ -279,7 +279,7 @@ async function octopart(queries) {
     )
     .then(responses =>
       queries.reduce((previousResults, query) => {
-        const empty = query.get('term') ? immutable.List() : immutable.Map()
+        const empty = immutable.List()
         const previous = previousResults.get(query) || empty
         const query_id = String(query.hashCode())
         let results = responses.filter(r => r.reference === query_id)
@@ -310,24 +310,10 @@ async function octopart(queries) {
                 .some(offer => offer.get('sku').equals(query_sku))
             )
           }
-          response = newParts.first() || previous
+          response = newParts || previous
         }
         return previousResults.set(query, response)
       }, immutable.Map())
-    )
-    .then(responses =>
-      responses.map((response, query) => {
-        // filter out according to 'from' argument of offers
-        const retailers = getRetailers(query)
-        const filterOffers = part =>
-          part.update('offers', offers =>
-            offers && offers.filter(o => retailers.includes(o.getIn(['sku', 'vendor'])))
-          )
-        if (immutable.List.isList(response)) {
-          return response.map(filterOffers)
-        }
-        return filterOffers(response)
-      })
     )
 }
 
