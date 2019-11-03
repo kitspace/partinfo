@@ -1,4 +1,7 @@
 module.exports = {
+  // prefix used for redis keys on the overall query cache
+  // note that this prefix is not used for octopart and other caches further down the line
+  QUERY_KEY_PREFIX: 'dev-partinfo:',
   // domains allowed to make requests (other than the domain this is served on)
   ALLOWED_CORS_DOMAINS: [
     /* 'https://example.com' */

@@ -10,7 +10,7 @@ const {request_bus, response_bus} = require('./message_bus')
 const QUERY_BATCH_SIZE = 20
 const QUERY_MAX_WAIT_MS = 100 //milliseconds
 
-const {QUERY_CACHE_TIMEOUT_S} = require('../config')
+const {QUERY_CACHE_TIMEOUT_S, QUERY_KEY_PREFIX} = require('../config')
 
 const redisClient = redis.createClient()
 
@@ -91,7 +91,7 @@ function fromRedis(redis_response) {
 }
 
 function queryToKey(query) {
-  return query
+  return QUERY_KEY_PREFIX + query
     .filter(
       (_, k) =>
         k !== 'id' && k !== 'common_parts_matches' && k !== 'electro_grammar'
