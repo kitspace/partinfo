@@ -7,26 +7,32 @@ function search(queries) {
   return Promise.all([octopart(queries), lcsc(queries)]).then(
     async ([octopart_responses, lcsc_responses]) => {
       let [merged, remaining_lcsc] = merge(octopart_responses, lcsc_responses)
+
+      // get further octopart information by searching mpns of parts we only found at lcsc
       const further_octopart = remaining_lcsc
         .map((response, query) =>
-          response.map(part => {
-            const original_query = query
-            return query
-              .merge({original_query})
-              .remove('sku')
-              .remove('id')
-              .set('mpn', part.get('mpn'))
-          })
+          response.map(part =>
+            immutable.Map({
+              original_query: query,
+              mpn: part.get('mpn'),
+              fields: query.get('fields'),
+            })
+          )
         )
         .flatten(1)
       let rs = await octopart(further_octopart)
-      rs = rs.mapEntries(([query, response]) => [
-        query.get('original_query'),
-        response,
-      ])
-      ;[merged, remaining_lcsc] = merge(rs.merge(merged), remaining_lcsc)
+      rs = rs.entrySeq().reduce((rs, [query, response]) => {
+        query = query.get('original_query')
+        if (rs.get(query)) {
+          rs.update(query, rs => rs.concat(response))
+        }
+        return rs.set(query, response)
+      }, immutable.Map())
+      merged = concatResponses(rs, merged)
+      ;[merged, remaining_lcsc] = merge(merged, remaining_lcsc)
+
+      merged = concatResponses(merged, remaining_lcsc)
       return merged
-        .merge(remaining_lcsc)
         .map((response, query) => {
           // filter out according to 'from' argument of offers
           const retailers = getRetailers(query)
@@ -48,6 +54,22 @@ function search(queries) {
           return [query, response]
         })
     }
+  )
+}
+
+function concatResponses(a, b) {
+  return immutable.Map(
+    a
+      .keySeq()
+      .concat(b.keySeq())
+      .map(key => {
+        const as = a.get(key)
+        const bs = b.get(key)
+        if (as != null && bs != null) {
+          return [key, as.concat(bs)]
+        }
+        return [key, as || bs]
+      })
   )
 }
 
