@@ -155,11 +155,14 @@ function getFields(info) {
 
   // coerce and sort to help caching
   // XXX needs to be updated if more arguments are added
-  fields = fields.updateIn(
-    ['offers', '__arguments', 0, 'from', 'value'],
-    from =>
-      from && (typeof from === 'string' ? immutable.List.of(from) : from.sort())
-  )
+  fields = fields
+    .updateIn(
+      ['offers', '__arguments', 0, 'from', 'value'],
+      from =>
+        from &&
+        (typeof from === 'string' ? immutable.List.of(from) : from.sort())
+    )
+    .removeIn(['offers', '__arguments', 0, 'from', 'kind'])
 
   return fields
 }
