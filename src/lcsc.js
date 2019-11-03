@@ -99,8 +99,8 @@ async function searchAcrossCurrencies(query, currencies) {
       return merged
     }, immutable.List())
 }
+
 function processResult(result) {
-  console.log(JSON.stringify(result, null, 2))
   const mpn = getMpn(result)
   const datasheet = result.getIn(['datasheet', 'pdf'])
   const sku = getSku(result)
