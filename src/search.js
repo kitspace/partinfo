@@ -4,8 +4,21 @@ const lcsc = require('./lcsc')
 
 function search(queries) {
   return Promise.all([octopart(queries), lcsc(queries)]).then(
-    ([octopart_responses, lcsc_responses]) => {
-      let {merged, remaining_lcsc} = merge(octopart_responses, lcsc_responses)
+    async ([octopart_responses, lcsc_responses]) => {
+      let [merged, remaining_lcsc] = merge(octopart_responses, lcsc_responses)
+      const further_octopart = remaining_lcsc
+        .filter(x => x)
+        .map((response, query) => {
+          const original_query = query
+          return query
+            .merge({original_query})
+            .remove('sku')
+            .remove('id')
+            .set('mpn', response.get('mpn'))
+        })
+      let rs = await octopart(further_octopart)
+      rs = rs.mapEntries(([query, response]) => [query.get('original_query'), response])
+      ;[merged, remaining_lcsc] = merge(rs.merge(merged), remaining_lcsc)
       return merged.merge(remaining_lcsc).mapEntries(([query, response]) => {
         if (!query.get('term') && immutable.List.isList(response)) {
           return [query, response.first()]
@@ -35,7 +48,7 @@ function merge(octopart_responses, lcsc_responses) {
         return [query, response]
       }
     })
-  return {merged, remaining_lcsc}
+  return [merged, remaining_lcsc]
 }
 
 module.exports = search
