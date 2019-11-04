@@ -237,6 +237,40 @@ function getMpn(result) {
   return immutable.Map({part, manufacturer})
 }
 
+
+function paramsFromElectroGrammar(q) {
+  const eg = q.get('electro_grammar')
+  const type = eg.get('type')
+  const size = eg.get('size')
+  const ignored = eg.get('ignored')
+  const resistance = eg.get('resistance')
+  const capacitance = eg.get('capacitance')
+  const color = eg.get('color')
+
+  const params = {
+    'attributes[package][]': size,
+    current_page: '1',
+    in_stock: 'false',
+    is_RoHS: 'false',
+    show_icon: 'false',
+    search_content: ignored,
+  }
+  if (resistance != null) {
+    params.category = 439 // chip resistors
+    params['attributes[Resistance+(Ohms)][]'] = formatSI(resistance)
+      .replace(' ', '')
+      .replace('k', 'K')
+  } else if (capacitance != null) {
+    params.category = 313 // MLC capacitors
+    params['attributes[Capacitance][]'] =
+      formatSI(capacitance).replace(' ', '') + 'F'
+  }
+}
+
+function parametricSearch(q, currencies) {
+  const params = paramsFromElectroGrammar(q)
+}
+
 function lcsc(queries) {
   return Promise.all(
     queries.map(async q => {
@@ -252,7 +286,12 @@ function lcsc(queries) {
       }
       let response
       if (term != null) {
-        response = await searchAcrossCurrencies(term, currencies)
+        const size = q.getIn(['electro_grammar', 'size'])
+        if (size == null) {
+          response = await searchAcrossCurrencies(term, currencies)
+        } else {
+          response = await parametricSearch(q, currencies)
+        }
       } else if (mpn != null) {
         const s = (mpn.get('manufacturer') + ' ' + mpn.get('part')).trim()
         response = await searchAcrossCurrencies(s, currencies)

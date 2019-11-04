@@ -2706,6 +2706,11 @@ shush@^1.0.0:
     caller "~0.0.1"
     strip-json-comments "~0.1.1"
 
+si-format@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/si-format/-/si-format-1.1.0.tgz#f7be204d9083d88de4b65f5059df974668889d40"
+  integrity sha512-h2ZtVPiVsYRzQCjQ/benHhRbKhyJuspxYvG5XwXgMXIvQIwA91IQU0r0hIQm52v0KOt6JD5CdzadyiUg6IG91A==
+
 signal-exit@^3.0.0:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"

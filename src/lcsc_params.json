@@ -1,0 +1,730 @@
+[
+  {
+    "value": "0.1pF",
+    "num": 9
+  },
+  {
+    "value": "0.2pF",
+    "num": 26
+  },
+  {
+    "value": "0.25pF",
+    "num": 1
+  },
+  {
+    "value": "0.3pF",
+    "num": 29
+  },
+  {
+    "value": "0.4pF",
+    "num": 17
+  },
+  {
+    "value": "0.50pF",
+    "num": 2
+  },
+  {
+    "value": "0.5pF",
+    "num": 62
+  },
+  {
+    "value": "0.60pF",
+    "num": 2
+  },
+  {
+    "value": "0.6pF",
+    "num": 20
+  },
+  {
+    "value": "0.68pF",
+    "num": 1
+  },
+  {
+    "value": "0.7pF",
+    "num": 20
+  },
+  {
+    "value": "0.75pF",
+    "num": 29
+  },
+  {
+    "value": "0.8pF",
+    "num": 36
+  },
+  {
+    "value": "0.82pF",
+    "num": 3
+  },
+  {
+    "value": "0.9pF",
+    "num": 11
+  },
+  {
+    "value": "1pF",
+    "num": 96
+  },
+  {
+    "value": "1.1pF",
+    "num": 16
+  },
+  {
+    "value": "1.2pF",
+    "num": 67
+  },
+  {
+    "value": "1.3pF",
+    "num": 21
+  },
+  {
+    "value": "1.4pF",
+    "num": 3
+  },
+  {
+    "value": "1.5pF",
+    "num": 69
+  },
+  {
+    "value": "1.6pF",
+    "num": 14
+  },
+  {
+    "value": "1.7pF",
+    "num": 1
+  },
+  {
+    "value": "1.8pF",
+    "num": 72
+  },
+  {
+    "value": "1.9pF",
+    "num": 1
+  },
+  {
+    "value": "2pF",
+    "num": 61
+  },
+  {
+    "value": "2.2pF",
+    "num": 68
+  },
+  {
+    "value": "2.4pF",
+    "num": 34
+  },
+  {
+    "value": "2.5pF",
+    "num": 17
+  },
+  {
+    "value": "2.7pF",
+    "num": 64
+  },
+  {
+    "value": "2.9pF",
+    "num": 1
+  },
+  {
+    "value": "3pF",
+    "num": 61
+  },
+  {
+    "value": "3.1pF",
+    "num": 1
+  },
+  {
+    "value": "3.2pF",
+    "num": 1
+  },
+  {
+    "value": "3.3pF",
+    "num": 74
+  },
+  {
+    "value": "3.5pF",
+    "num": 6
+  },
+  {
+    "value": "3.6pF",
+    "num": 33
+  },
+  {
+    "value": "3.9pF",
+    "num": 55
+  },
+  {
+    "value": "4pF",
+    "num": 37
+  },
+  {
+    "value": "4.2pF",
+    "num": 2
+  },
+  {
+    "value": "4.3pF",
+    "num": 27
+  },
+  {
+    "value": "4.7pF",
+    "num": 74
+  },
+  {
+    "value": "5pF",
+    "num": 53
+  },
+  {
+    "value": "5.1pF",
+    "num": 19
+  },
+  {
+    "value": "5.6pF",
+    "num": 77
+  },
+  {
+    "value": "6pF",
+    "num": 49
+  },
+  {
+    "value": "6.2pF",
+    "num": 21
+  },
+  {
+    "value": "6.5pF",
+    "num": 1
+  },
+  {
+    "value": "6.8pF",
+    "num": 77
+  },
+  {
+    "value": "7pF",
+    "num": 42
+  },
+  {
+    "value": "7.5pF",
+    "num": 23
+  },
+  {
+    "value": "8pF",
+    "num": 63
+  },
+  {
+    "value": "8.2pF",
+    "num": 75
+  },
+  {
+    "value": "8.7pF",
+    "num": 1
+  },
+  {
+    "value": "9pF",
+    "num": 58
+  },
+  {
+    "value": "9.1pF",
+    "num": 12
+  },
+  {
+    "value": "9.5pF",
+    "num": 1
+  },
+  {
+    "value": "9.7pF",
+    "num": 1
+  },
+  {
+    "value": "10pF",
+    "num": 162
+  },
+  {
+    "value": "11pF",
+    "num": 12
+  },
+  {
+    "value": "12pF",
+    "num": 93
+  },
+  {
+    "value": "13pF",
+    "num": 15
+  },
+  {
+    "value": "14pF",
+    "num": 2
+  },
+  {
+    "value": "15pF",
+    "num": 95
+  },
+  {
+    "value": "16pF",
+    "num": 20
+  },
+  {
+    "value": "18pF",
+    "num": 94
+  },
+  {
+    "value": "20pF",
+    "num": 63
+  },
+  {
+    "value": "22pF",
+    "num": 137
+  },
+  {
+    "value": "24pF",
+    "num": 26
+  },
+  {
+    "value": "25pF",
+    "num": 13
+  },
+  {
+    "value": "27pF",
+    "num": 80
+  },
+  {
+    "value": "30pF",
+    "num": 46
+  },
+  {
+    "value": "33pF",
+    "num": 119
+  },
+  {
+    "value": "36pF",
+    "num": 28
+  },
+  {
+    "value": "39pF",
+    "num": 59
+  },
+  {
+    "value": "43pF",
+    "num": 18
+  },
+  {
+    "value": "47pF",
+    "num": 128
+  },
+  {
+    "value": "50pF",
+    "num": 3
+  },
+  {
+    "value": "51pF",
+    "num": 18
+  },
+  {
+    "value": "56pF",
+    "num": 69
+  },
+  {
+    "value": "62pF",
+    "num": 18
+  },
+  {
+    "value": "68pF",
+    "num": 85
+  },
+  {
+    "value": "75pF",
+    "num": 14
+  },
+  {
+    "value": "82pF",
+    "num": 64
+  },
+  {
+    "value": "91pF",
+    "num": 11
+  },
+  {
+    "value": "100pF",
+    "num": 243
+  },
+  {
+    "value": "110pF",
+    "num": 1
+  },
+  {
+    "value": "120pF",
+    "num": 60
+  },
+  {
+    "value": "130pF",
+    "num": 5
+  },
+  {
+    "value": "150pF",
+    "num": 102
+  },
+  {
+    "value": "160pF",
+    "num": 7
+  },
+  {
+    "value": "180pF",
+    "num": 65
+  },
+  {
+    "value": "200pF",
+    "num": 34
+  },
+  {
+    "value": "220pF",
+    "num": 202
+  },
+  {
+    "value": "240pF",
+    "num": 6
+  },
+  {
+    "value": "270pF",
+    "num": 62
+  },
+  {
+    "value": "300pF",
+    "num": 26
+  },
+  {
+    "value": "330pF",
+    "num": 169
+  },
+  {
+    "value": "360pF",
+    "num": 9
+  },
+  {
+    "value": "390pF",
+    "num": 57
+  },
+  {
+    "value": "430pF",
+    "num": 6
+  },
+  {
+    "value": "470pF",
+    "num": 235
+  },
+  {
+    "value": "500pF",
+    "num": 5
+  },
+  {
+    "value": "510pF",
+    "num": 15
+  },
+  {
+    "value": "560pF",
+    "num": 78
+  },
+  {
+    "value": "620pF",
+    "num": 8
+  },
+  {
+    "value": "680pF",
+    "num": 117
+  },
+  {
+    "value": "750pF",
+    "num": 8
+  },
+  {
+    "value": "820pF",
+    "num": 47
+  },
+  {
+    "value": "910pF",
+    "num": 5
+  },
+  {
+    "value": "1nF",
+    "num": 449
+  },
+  {
+    "value": "1000pF",
+    "num": 1
+  },
+  {
+    "value": "1.1nF",
+    "num": 1
+  },
+  {
+    "value": "1.2nF",
+    "num": 47
+  },
+  {
+    "value": "1.3nF",
+    "num": 1
+  },
+  {
+    "value": "1.5nF",
+    "num": 127
+  },
+  {
+    "value": "1.8nF",
+    "num": 43
+  },
+  {
+    "value": "2nF",
+    "num": 16
+  },
+  {
+    "value": "2.1nF",
+    "num": 1
+  },
+  {
+    "value": "2.2nF",
+    "num": 240
+  },
+  {
+    "value": "2.7nF",
+    "num": 52
+  },
+  {
+    "value": "3nF",
+    "num": 4
+  },
+  {
+    "value": "3.2nF",
+    "num": 1
+  },
+  {
+    "value": "3300pF",
+    "num": 1
+  },
+  {
+    "value": "3.3nF",
+    "num": 146
+  },
+  {
+    "value": "3.9nF",
+    "num": 39
+  },
+  {
+    "value": "4.7nF",
+    "num": 200
+  },
+  {
+    "value": "5nF",
+    "num": 4
+  },
+  {
+    "value": "5.1nF",
+    "num": 3
+  },
+  {
+    "value": "5.6nF",
+    "num": 42
+  },
+  {
+    "value": "6.2nF",
+    "num": 1
+  },
+  {
+    "value": "6.8nF",
+    "num": 94
+  },
+  {
+    "value": "8.2nF",
+    "num": 36
+  },
+  {
+    "value": "9.1nF",
+    "num": 1
+  },
+  {
+    "value": "10nF",
+    "num": 411
+  },
+  {
+    "value": "12nF",
+    "num": 23
+  },
+  {
+    "value": "15nF",
+    "num": 81
+  },
+  {
+    "value": "18nF",
+    "num": 25
+  },
+  {
+    "value": "20nF",
+    "num": 14
+  },
+  {
+    "value": "22nF",
+    "num": 227
+  },
+  {
+    "value": "27nF",
+    "num": 37
+  },
+  {
+    "value": "33nF",
+    "num": 124
+  },
+  {
+    "value": "39nF",
+    "num": 26
+  },
+  {
+    "value": "40nF",
+    "num": 1
+  },
+  {
+    "value": "43nF",
+    "num": 1
+  },
+  {
+    "value": "47nF",
+    "num": 201
+  },
+  {
+    "value": "56nF",
+    "num": 31
+  },
+  {
+    "value": "68nF",
+    "num": 85
+  },
+  {
+    "value": "82nF",
+    "num": 30
+  },
+  {
+    "value": "100nF",
+    "num": 622
+  },
+  {
+    "value": "120nF",
+    "num": 11
+  },
+  {
+    "value": "150nF",
+    "num": 54
+  },
+  {
+    "value": "180nF",
+    "num": 5
+  },
+  {
+    "value": "200nF",
+    "num": 1
+  },
+  {
+    "value": "220nF",
+    "num": 271
+  },
+  {
+    "value": "270nF",
+    "num": 8
+  },
+  {
+    "value": "330nF",
+    "num": 94
+  },
+  {
+    "value": "390nF",
+    "num": 15
+  },
+  {
+    "value": "470nF",
+    "num": 222
+  },
+  {
+    "value": "560nF",
+    "num": 7
+  },
+  {
+    "value": "680nF",
+    "num": 51
+  },
+  {
+    "value": "820nF",
+    "num": 7
+  },
+  {
+    "value": "1uF",
+    "num": 457
+  },
+  {
+    "value": "1.2uF",
+    "num": 1
+  },
+  {
+    "value": "1.5uF",
+    "num": 12
+  },
+  {
+    "value": "2.2uF",
+    "num": 358
+  },
+  {
+    "value": "2.7uF",
+    "num": 1
+  },
+  {
+    "value": "3.3uF",
+    "num": 37
+  },
+  {
+    "value": "4.7uF",
+    "num": 355
+  },
+  {
+    "value": "6.8uF",
+    "num": 7
+  },
+  {
+    "value": "8.2uF",
+    "num": 1
+  },
+  {
+    "value": "10uF",
+    "num": 472
+  },
+  {
+    "value": "15uF",
+    "num": 2
+  },
+  {
+    "value": "17uF",
+    "num": 1
+  },
+  {
+    "value": "22uF",
+    "num": 244
+  },
+  {
+    "value": "33uF",
+    "num": 8
+  },
+  {
+    "value": "47uF",
+    "num": 92
+  },
+  {
+    "value": "68uF",
+    "num": 2
+  },
+  {
+    "value": "100uF",
+    "num": 39
+  },
+  {
+    "value": "220uF",
+    "num": 1
+  },
+  {
+    "value": "330uF",
+    "num": 1
+  },
+  {
+    "value": "-",
+    "num": 81
+  }
+]
