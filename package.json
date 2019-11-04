@@ -22,7 +22,6 @@
     "ioredis": "^4.10.0",
     "promise-rate-limit": "^0.0.1",
     "redis": "^2.8.0",
-    "si-format": "^1.1.0",
     "superagent": "^3.4.3"
   },
   "devDependencies": {
