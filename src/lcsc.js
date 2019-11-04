@@ -6,102 +6,18 @@ const cheerio = require('cheerio')
 
 const {getRetailers, getCurrencies} = require('./queries')
 
-const currency_cookies = immutable.Map({
-  USD:
-    'currency=eyJpdiI6InJOVjRyS3JCdXphUkVnTk1KSTZGb3c9PSIsInZhbHVlIjoiaGluMUZSQ1JBXC9EU1Qxd2dsMTJsNDhxaUZGXC9tUjNzU0V4RDNZN0tDdmZSRDdZdXB0R3ZhVm1XVnlHRFJVZGxvRE1uOEpiUCtrcUNDeG94VTlGcUU4Z1ZUVFAyWGgxUzdvRXRBVWF3am9oNjVkTEhGbFdrbjFNR3pmTGltOGRBS0dFTWdVdm56V2ZYWmdMYkhBQTFKN3c9PSIsIm1hYyI6IjVjZjZkZDExZWNlMmRkOGQ4Y2FlNWI5ZjUyNmEyYTAzZjJlNWQ5MTg5M2EzNjg2OWRhZWMyM2VhZDlhN2NmM2YifQ==',
-  EUR:
-    'currency=eyJpdiI6Im9rZzRtNUZJOGRQdjVCWmNpQzBMQ3c9PSIsInZhbHVlIjoiU0dzd2dZTW02c0dQYXBIWEtWQVVQRGp3cno3S2JHSTN5c1E0YTFlM3VZZmo1WmJzOHdRSFpMYmt3b1UwOTNXY0xVMWFEREUwQXI1MWs4dWNVNFY5ekZ6MHZteUF1ZzhIVnBleWVZK0oxd0hXOTBhbFpFQUhOYWFuTDJiTDV6c0Z0cDZ0OVduYWpPOEZHdkhiY1BZUW93PT0iLCJtYWMiOiI2Mjk0N2M1MmYyMjdmNTg0Mjk1NzlmMjU2MzUxYjM0MzcwYTNkMTM4MzIwNGE5OWNiMDYxOTAzMTlmMjIwNjg2In0=',
-  GBP:
-    'currency=eyJpdiI6ImVHalVzZUJDaTFiQXg4ZjhVMGQzRVE9PSIsInZhbHVlIjoiNWdEZnFBTlgzb0t2bHA5WlRIRzh1U0I1WlwvU1RlK0R1ZE9ZdGhLXC9RODlhdFVTUWJJMG1CSXdGS01SRzRJTGxtV01YbFwvZFZQbjFkUVVZd09HUXNTUnRraWc0UFZ6UVFhekhPZFVYMWU1UlVSZ2xLOTc3UHV0MERWNnJnQ1VkbHozcldxUWJYV3R4bjVzVkYrcjVySkN3PT0iLCJtYWMiOiI3MzRhMGQwN2VkODEzMTk0YTEwMDQ0ZmNjZGI0MmJlMzQxMzA0Zjk2MzQ0MjBmMGQ4MTdiOWMzMDg5MTgyNDQ2In0=',
-  SGD:
-    'currency=eyJpdiI6InQ3cnVJXC83Z1JYbzFPS214dTZDXC9NQT09IiwidmFsdWUiOiJvczFRNWt5dFBneDFKRzlPZ3ljUENYTnlnNndnUHd2Z1wvMDQ3SUdpcE9OYUI2TDN0dEE3K0dGUWpcL1pBUFdZSE9RM05EWlNzV3l1TXVBOEpmZFRZT3Z6MG54amE5YVJsS1BhMHV0V2s5NjZlUVFQS3dEbmE4dVJiNHpGaVh1Sk1oU2NnVlluSEZqK3hHa0J3Rlp6Z0VPQT09IiwibWFjIjoiMzI5ZDJlMjJkMDUzOTJiMzg3YzUxZThkNmY2OTMxNjQzZTdlOTdlNzEwNDBmOTYyMDdkZTZjODRmNGI0Nzc0YiJ9',
-})
-
-const symbol_to_currency = immutable.Map({
-  US$: 'USD',
-  '€': 'EUR',
-  '£': 'GBP',
-  S$: 'SGD',
-})
-
-const supported_currencies = currency_cookies.keySeq()
-
-//maps names to the ones used by octopart
-const manufacturer_map = immutable.Map({
-  '(DIOTEC)': 'Diotec',
-  '(Weltrend)': 'Weltrend',
-  '3L COIL': '3L',
-  '3PEAK': '3Peak',
-  'ACTIVE-SEMI': 'Active-Semi',
-  AKER: 'Aker',
-  'Allegro MicroSystems, LLC': 'Allegro MicroSystems LLC',
-  'Allwinner Tech': 'Allwinner Technology',
-  BOURNS: 'Bourns',
-  BUSSMANN: 'Bussmann',
-  'Brightek Optoelectronics': 'Brightek Optoelectronic',
-  'Burr-Brown': 'Burr Brown',
-  CHAMPION: 'Champion',
-  CONQUER: 'Conquer',
-  CREE: 'Cree',
-  DAVICOM: 'Davicom',
-  DecaWave: 'Decawave',
-  'Diodes Inc': 'Diodes Inc.',
-  EATON: 'Eaton',
-  ELNA: 'Elna',
-  EMTEK: 'Emtek',
-  FLUKE: 'Fluke',
-  FOXCONN: 'Foxconn',
-  FUJITSU: 'Fujitsu',
-  'Global Mixed-mode Tech': 'Global Mixed-Mode Technology',
-  'HALO ELECTRONICS': 'HALO Electronics',
-  HARVATEK: 'Harvatek',
-  HUAWEI: 'Huawei',
-  IDEC: 'Idec',
-  INTEL: 'Intel',
-  'Integrated Device Tech': 'Integrated Device Technology',
-  JUSHUO: 'Jushuo',
-  'K.S Terminals': 'KS Terminals',
-  KAMAYA: 'Kamaya',
-  'Linear Tech': 'Linear Technology',
-  'MA/COM': 'MA-COM',
-  MEMSIC: 'Memsic',
-  'METZ CONNECT GmbH': 'Metz Connect',
-  MOLEX: 'Molex',
-  'Microchip Tech': 'Microchip',
-  NISSEI: 'Nissei',
-  NUTECH: 'Nutech',
-  'Nanya Tech': 'Nanya Technology',
-  OPTEK: 'Optek',
-  'OmniVision Technologies': 'Omnivision Technologies',
-  PANASONIC: 'Panasonic',
-  PINREX: 'Pinrex',
-  'POWER INTEGRATIONS': 'Power Integrations',
-  'Princeton Tech': 'Princeton Technology',
-  'ProTek Devices': 'Protek Devices',
-  'Prolific Tech': 'Prolific Technology',
-  RALEC: 'Ralec',
-  RENESAS: 'Renesas',
-  RIGOL: 'Rigol',
-  ROQANG: 'Roqang',
-  SCHURTER: 'Schurter',
-  SEMTECH: 'Semtech',
-  SHINYEI: 'Shinyei',
-  SIEMENS: 'Siemens',
-  'SILICON LABS': 'Silicon Labs',
-  SIWARD: 'Siward',
-  SPANSION: 'Spansion',
-  SUSUMU: 'Susumu',
-  TAKAMISAWA: 'Takamisawa',
-  'TANCAP Tech': 'Tancap Technology',
-  'TLC Electronic': 'TLC Electronics',
-  TOSHIBA: 'Toshiba',
-  'Vishay Intertech': 'Vishay',
-  'Vishay Micro-Measurements': 'Vishay Micro Measurements',
-  WIZNET: 'WIZnet',
-  'XIAMEN FARATRONIC': 'Xiamen Faratronic',
-  XILINX: 'Xilinx',
-  YAGEO: 'Yageo',
-})
+const {
+  currency_cookies,
+  symbol_to_currency,
+  manufacturer_map,
+  capacitance_map,
+  capacitor_tolerance_map,
+  capactitor_characteristic_map,
+  capactitor_voltage_rating_map,
+  resistance_map,
+  resistor_power_map,
+  resistor_tolerance_map,
+} = require('./lcsc_data')
 
 const search = rateLimit(80, 1000, async function(term, currency) {
   const url = 'https://lcsc.com/api/global/search'
@@ -237,7 +153,6 @@ function getMpn(result) {
   return immutable.Map({part, manufacturer})
 }
 
-
 function paramsFromElectroGrammar(q) {
   const eg = q.get('electro_grammar')
   const type = eg.get('type')
@@ -257,13 +172,10 @@ function paramsFromElectroGrammar(q) {
   }
   if (resistance != null) {
     params.category = 439 // chip resistors
-    params['attributes[Resistance+(Ohms)][]'] = formatSI(resistance)
-      .replace(' ', '')
-      .replace('k', 'K')
+    params['attributes[Resistance+(Ohms)][]'] = resistance_map[resistance]
   } else if (capacitance != null) {
     params.category = 313 // MLC capacitors
-    params['attributes[Capacitance][]'] =
-      formatSI(capacitance).replace(' ', '') + 'F'
+    params['attributes[Capacitance][]'] = capacitance_map[capacitance]
   }
 }
 

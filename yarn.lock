@@ -752,7 +752,7 @@ ee-first@1.1.1:
 
 "electro-grammar@git+https://github.com/kitspace/electro-grammar#dev2":
   version "1.1.0"
-  resolved "git+https://github.com/kitspace/electro-grammar#cf2a64357580860a2674e23071d68becd3164a7a"
+  resolved "git+https://github.com/kitspace/electro-grammar#8254e5050aa395156e0ebc1ee8719ab5dd471070"
   dependencies:
     nearley "^2.15.1"
 
@@ -2705,11 +2705,6 @@ shush@^1.0.0:
   dependencies:
     caller "~0.0.1"
     strip-json-comments "~0.1.1"
-
-si-format@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/si-format/-/si-format-1.1.0.tgz#f7be204d9083d88de4b65f5059df974668889d40"
-  integrity sha512-h2ZtVPiVsYRzQCjQ/benHhRbKhyJuspxYvG5XwXgMXIvQIwA91IQU0r0hIQm52v0KOt6JD5CdzadyiUg6IG91A==
 
 signal-exit@^3.0.0:
   version "3.0.2"
