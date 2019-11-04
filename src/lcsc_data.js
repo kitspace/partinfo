@@ -1389,6 +1389,17 @@ const resistor_tolerance_map = immutable.Map([
   [10, '±10%'],
 ])
 
+const led_color_map = immutable.fromJS({
+  red: ['Red'],
+  green: ['Green', '绿色'],
+  blue: ['Blue'],
+  yellow: ['Yellow'],
+  orange: ['Orange'],
+  purple: ['Purple'],
+  'yellow green': ['Green-yellow'],
+  white: ['White', '白色'],
+})
+
 module.exports = {
   currency_cookies,
   symbol_to_currency,
@@ -1399,4 +1410,5 @@ module.exports = {
   resistance_map,
   resistor_power_map,
   resistor_tolerance_map,
+  led_color_map,
 }

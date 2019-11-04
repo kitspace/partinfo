@@ -17,6 +17,7 @@ const {
   resistance_map,
   resistor_power_map,
   resistor_tolerance_map,
+  led_color_map,
 } = require('./lcsc_data')
 
 const search = rateLimit(80, 1000, async function(term, currency) {
@@ -172,11 +173,15 @@ function paramsFromElectroGrammar(q) {
   }
   if (resistance != null) {
     params.category = 439 // chip resistors
-    params['attributes[Resistance+(Ohms)][]'] = resistance_map[resistance]
+    params['attributes[Resistance+(Ohms)][]'] = resistance_map.get(resistance)
   } else if (capacitance != null) {
     params.category = 313 // MLC capacitors
-    params['attributes[Capacitance][]'] = capacitance_map[capacitance]
+    params['attributes[Capacitance][]'] = capacitance_map.get(capacitance)
+  } else if (color != null) {
+    params.category = 528 // LEDs
+    params['attributes[Color][]'] = led_color_map.get(color)
   }
+  return params
 }
 
 function parametricSearch(q, currencies) {
