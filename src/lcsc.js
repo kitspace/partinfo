@@ -18,6 +18,7 @@ const {
   resistor_power_map,
   resistor_tolerance_map,
   led_color_map,
+  spec_map,
 } = require('./lcsc_data')
 
 const search = rateLimit(80, 1000, async function(term, currency, params) {
@@ -145,10 +146,36 @@ function processResult(result) {
       credit_url: 'https://lcsc.com',
     }
   }
+  const specs = []
+  if (result.get('package') != null) {
+    specs.push({
+      key: 'case_package',
+      name: 'Case/Package',
+      value: result
+        .get('package')
+        .replace(/<.*?>/g, '')
+        .trim(),
+    })
+  }
+  if (result.get('attributes') != null) {
+    result.get('attributes').forEach((v, k) => {
+      if (spec_map.get(k) != null) {
+        specs.push(spec_map.get(k).set('value', v))
+      }
+    })
+  }
+  if (result.get('tags') && result.get('tags').includes('RoHS')) {
+    specs.push({
+      key: 'rohs_status',
+      name: 'RoHS',
+      value: 'Compliant',
+    })
+  }
   return immutable.fromJS({
     mpn,
     datasheet,
     image,
+    specs,
     sku,
     prices,
     description,
