@@ -20,13 +20,27 @@ const {
   led_color_map,
 } = require('./lcsc_data')
 
-const search = rateLimit(80, 1000, async function(term, currency) {
-  const url = 'https://lcsc.com/api/global/search'
+const search = rateLimit(80, 1000, async function(term, currency, params) {
+  let url, params_string
+  if (params == null) {
+    url = 'https://lcsc.com/api/global/search'
+    param_string = `q=${term}&page=1&order=`
+  } else {
+    url = 'https://lcsc.com/api/products/search'
+    params.search_content = term
+    let params_string = ''
+    for (const key in params) {
+      if (immutable.Seq.isSeq(params[key])) {
+        params[key].forEach(x => (params_string += '&' + key + '=' + x))
+      } else {
+        params_string += '&' + key + '=' + params[key]
+      }
+    }
+  }
   return superagent
     .post(url)
     .type('form')
-    .query('q=' + term)
-    .send({page: 1, order: ''})
+    .query(params_string)
     .accept('application/json')
     .set('cookie', currency_cookies.get(currency))
     .then(r => {
@@ -34,7 +48,7 @@ const search = rateLimit(80, 1000, async function(term, currency) {
       if (r.status !== 200) {
         console.error(r.status)
       }
-      return immutable.fromJS(r.body.result.transData)
+      return immutable.fromJS(r.body.result.transData || r.body.result.data)
     })
 })
 
@@ -60,12 +74,12 @@ const skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
     )
 })
 
-async function searchAcrossCurrencies(query, currencies) {
+async function searchAcrossCurrencies(term, currencies, params) {
   if (currencies == null || currencies.size === 0) {
     currencies = immutable.List.of('USD')
   }
   const responses = await Promise.all(
-    currencies.map(c => search(query, c))
+    currencies.map(c => search(term, c, params))
   ).then(rs => immutable.List(rs).flatten(1))
   return responses
     .reduce((merged, result) => {
@@ -156,36 +170,122 @@ function getMpn(result) {
 
 function paramsFromElectroGrammar(q) {
   const eg = q.get('electro_grammar')
+  if (eg == null) {
+    return
+  }
   const type = eg.get('type')
   const size = eg.get('size')
-  const ignored = eg.get('ignored')
-  const resistance = eg.get('resistance')
-  const capacitance = eg.get('capacitance')
-  const color = eg.get('color')
-
+  if (size == null) {
+    return
+  }
   const params = {
     'attributes[package][]': size,
+    'attributes[Mounting+Type][]': 'Surface+MountType',
     current_page: '1',
     in_stock: 'false',
     is_RoHS: 'false',
     show_icon: 'false',
-    search_content: ignored,
   }
-  if (resistance != null) {
+
+  if (eg.get('type') === 'resistor') {
     params.category = 439 // chip resistors
-    params['attributes[Resistance+(Ohms)][]'] = resistance_map.get(resistance)
-  } else if (capacitance != null) {
+    const resistance = resistance_map.get(eg.get('resistance'))
+    if (resistance == null) {
+      return
+    }
+
+    const eg_tolerance = eg.get('tolerance')
+    // select all below the maximum
+    let lcsc_tolerance = resistor_tolerance_map
+      .groupBy((_, k) => k <= eg_tolerance)
+      .get(true)
+    if (eg_tolerance != null && lcsc_tolerance == null) {
+      return
+    } else if (lcsc_tolerance != null) {
+      lcsc_tolerance = lcsc_tolerance.valueSeq()
+    }
+
+    const eg_power_rating = eg.get('power_rating')
+    // select all above the minimum
+    let lcsc_power_rating = resistor_power_map
+      .groupBy((_, k) => k >= eg_power_rating)
+      .get(true)
+    if (eg_power_rating != null && lcsc_power_rating == null) {
+      return
+    } else if (lcsc_power_rating != null) {
+      lcsc_power_rating = lcsc_power_rating.valueSeq()
+    }
+
+    params['attributes[Resistance+(Ohms)][]'] = resistance
+    params['attributes[Tolerance][]'] = lcsc_tolerance
+    params['attributes[Power+(Watts)][]'] = lcsc_power_rating
+    return params
+  } else if (eg.get('type') === 'capacitor') {
     params.category = 313 // MLC capacitors
-    params['attributes[Capacitance][]'] = capacitance_map.get(capacitance)
-  } else if (color != null) {
+    const capacitance = eg.get('capacitance')
+    if (capacitance == null) {
+      return
+    }
+
+    const eg_tolerance = eg.get('tolerance')
+    // select all below the maximum
+    let lcsc_tolerance = capacitor_tolerance_map
+      .groupBy((_, k) => k <= eg_tolerance)
+      .get(true)
+    if (eg_tolerance != null && lcsc_tolerance == null) {
+      return
+    } else if (lcsc_tolerance != null) {
+      lcsc_tolerance = lcsc_tolerance.valueSeq()
+    }
+
+    const eg_characteristic = eg.get('characteristic')
+    const lcsc_characteristic = capactitor_characteristic_map.get(
+      eg_characteristic
+    )
+    if (eg_characteristic != null && lcsc_characteristic == null) {
+      return
+    }
+
+    const eg_voltage_rating = eg.get('voltage_rating')
+    let lcsc_voltage_rating = capactitor_voltage_rating_map
+      .groupBy((_, k) => k >= eg_voltage_rating)
+      .get(true)
+    if (eg_voltage_rating != null && lcsc_voltage_rating == null) {
+      return
+    } else if (lcsc_voltage_rating != null) {
+      lcsc_voltage_rating = lcsc_voltage_rating.valueSeq()
+    }
+
+    params['attributes[Capacitance][]'] = capacitance
+    params['attributes[Tolerance][]'] = lcsc_tolerance
+    params['attributes[Temperature+Coefficient][]'] = lcsc_characteristic
+    params['attributes[Voltage+-+Rated][]'] = lcsc_voltage_rating
+    return params
+  } else if (eg.get('type') === 'led') {
     params.category = 528 // LEDs
-    params['attributes[Color][]'] = led_color_map.get(color)
+    const color = led_color_map.get(eg.get('color'))
+    if (color == null) {
+      return
+    }
+    params['attributes[Color][]'] = color
+    return params
   }
-  return params
 }
 
-function parametricSearch(q, currencies) {
+async function parametricSearch(q, currencies) {
   const params = paramsFromElectroGrammar(q)
+  if (params == null) {
+    return searchAcrossCurrencies(q.get('term'), currencies)
+  }
+  let results = await searchAcrossCurrencies(
+    q.getIn(['electro_grammar', 'ignored']),
+    currencies,
+    params
+  )
+  if (results.size === 0) {
+    results = await searchAcrossCurrencies('', currencies, params)
+  }
+  return results
 }
 
 function lcsc(queries) {
@@ -203,12 +303,7 @@ function lcsc(queries) {
       }
       let response
       if (term != null) {
-        const size = q.getIn(['electro_grammar', 'size'])
-        if (size == null) {
-          response = await searchAcrossCurrencies(term, currencies)
-        } else {
-          response = await parametricSearch(q, currencies)
-        }
+        response = await parametricSearch(q, currencies)
       } else if (mpn != null) {
         const s = (mpn.get('manufacturer') + ' ' + mpn.get('part')).trim()
         response = await searchAcrossCurrencies(s, currencies)
