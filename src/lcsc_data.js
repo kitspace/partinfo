@@ -1416,6 +1416,15 @@ const spec_map = immutable.fromJS({
     key: 'dielectric_characteristic',
     name: 'Dielectric Characteristic',
   },
+  Color: {key: 'color', name: 'Color'},
+  'Wavelength(Range or typical)': {
+    key: 'wavelength',
+    name: 'Wavelength',
+  },
+  'Millicandela Rating': {
+    key: 'luminous_intensity',
+    name: 'Luminous Intensity',
+  },
 })
 
 module.exports = {
