@@ -76,6 +76,7 @@ const manufacturer_map = immutable.Map({
   RENESAS: 'Renesas',
   RIGOL: 'Rigol',
   ROQANG: 'Roqang',
+  'ROHM Semicon': 'Rohm',
   SCHURTER: 'Schurter',
   SEMTECH: 'Semtech',
   SHINYEI: 'Shinyei',
