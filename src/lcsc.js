@@ -12,8 +12,8 @@ const {
   manufacturer_map,
   capacitance_map,
   capacitor_tolerance_map,
-  capactitor_characteristic_map,
-  capactitor_voltage_rating_map,
+  capacitor_characteristic_map,
+  capacitor_voltage_rating_map,
   resistance_map,
   resistor_power_map,
   resistor_tolerance_map,
@@ -129,6 +129,7 @@ function processResult(result) {
   const moq = result.getIn(['info', 'min'])
   const order_multiple = result.getIn(['info', 'step'])
   const product_url = 'https://lcsc.com' + result.get('url')
+  console.log(result)
   return immutable.fromJS({
     mpn,
     datasheet,
@@ -185,7 +186,7 @@ function paramsFromElectroGrammar(q) {
     'attributes[package][]': size,
     current_page: '1',
     in_stock: 'false',
-    is_RoHS: 'false',
+    is_RoHS: 'true',
     show_icon: 'false',
   }
 
@@ -224,7 +225,7 @@ function paramsFromElectroGrammar(q) {
     return params
   } else if (eg.get('type') === 'capacitor') {
     params.category = 313 // MLC capacitors
-    const capacitance = eg.get('capacitance')
+    const capacitance = capacitance_map.get(eg.get('capacitance'))
     if (capacitance == null) {
       return
     }
@@ -241,7 +242,7 @@ function paramsFromElectroGrammar(q) {
     }
 
     const eg_characteristic = eg.get('characteristic')
-    const lcsc_characteristic = capactitor_characteristic_map.get(
+    const lcsc_characteristic = capacitor_characteristic_map.get(
       eg_characteristic
     )
     if (eg_characteristic != null && lcsc_characteristic == null) {
@@ -249,7 +250,7 @@ function paramsFromElectroGrammar(q) {
     }
 
     const eg_voltage_rating = eg.get('voltage_rating')
-    let lcsc_voltage_rating = capactitor_voltage_rating_map
+    let lcsc_voltage_rating = capacitor_voltage_rating_map
       .groupBy((_, k) => k >= eg_voltage_rating)
       .get(true)
     if (eg_voltage_rating != null && lcsc_voltage_rating == null) {
@@ -276,6 +277,7 @@ function paramsFromElectroGrammar(q) {
 
 async function parametricSearch(q, currencies) {
   const params = paramsFromElectroGrammar(q)
+  console.log({params})
   if (params == null) {
     return searchAcrossCurrencies(q.get('term'), currencies)
   }
