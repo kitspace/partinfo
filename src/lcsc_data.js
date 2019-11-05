@@ -292,7 +292,7 @@ const capacitor_tolerance_map = immutable.Map([
   [30, '±30%'],
 ])
 
-const capactitor_characteristic_map = immutable.fromJS({
+const capacitor_characteristic_map = immutable.fromJS({
   C0G: ['C0G', 'C0G(NP0)', 'C0G,NP0', 'COG', 'COG,NPO', 'NP0', 'NP0(C0G)'],
   U2J: ['U2J'],
   X5R: ['X5R'],
@@ -307,7 +307,7 @@ const capactitor_characteristic_map = immutable.fromJS({
   Y5V: ['Y5V'],
 })
 
-const capactitor_voltage_rating_map = immutable.Map([
+const capacitor_voltage_rating_map = immutable.Map([
   [2, '2V'],
   [2.5, '2.5V'],
   [4, '4V'],
@@ -1401,13 +1401,25 @@ const led_color_map = immutable.fromJS({
   white: ['White', '白色'],
 })
 
+const spec_map = immutable.fromJS({
+  'Resistance (Ohms)': {key: 'resistance', name: 'Resistance'},
+  Tolerance: {key: 'tolerance', name: 'Tolerance'},
+  'Power (Watts)': {key: 'power_rating', name: 'Power Rating'},
+  'Temperature Coefficient': {
+    key: 'temparature_coefficient',
+    name: 'Temperature Coefficient',
+  },
+  'Mounting Type': {key: 'mounting_style', name: 'Mounting Style'},
+})
+
 module.exports = {
   currency_cookies,
   symbol_to_currency,
   manufacturer_map,
   capacitance_map,
   capacitor_tolerance_map,
-  capactitor_characteristic_map,
+  capacitor_characteristic_map,
+  capacitor_voltage_rating_map,
   resistance_map,
   resistor_power_map,
   resistor_tolerance_map,
