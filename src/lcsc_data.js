@@ -1410,6 +1410,12 @@ const spec_map = immutable.fromJS({
     name: 'Temperature Coefficient',
   },
   'Mounting Type': {key: 'mounting_style', name: 'Mounting Style'},
+  Capacitance: {key: 'capacitance', name: 'Capacitance'},
+  'Voltage - Rated': {key: 'voltage_rating', name: 'Voltage Rating'},
+  'Temperature Coefficient': {
+    key: 'dielectric_characteristic',
+    name: 'Dielectric Characteristic',
+  },
 })
 
 module.exports = {
@@ -1424,4 +1430,5 @@ module.exports = {
   resistor_power_map,
   resistor_tolerance_map,
   led_color_map,
+  spec_map,
 }
