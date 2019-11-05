@@ -24,15 +24,15 @@ const search = rateLimit(80, 1000, async function(term, currency, params) {
   let url, params_string
   if (params == null) {
     url = 'https://lcsc.com/api/global/search'
-    param_string = `q=${term}&page=1&order=`
+    params_string = `q=${term}&page=1&order=`
   } else {
     url = 'https://lcsc.com/api/products/search'
     params.search_content = term
-    let params_string = ''
+    params_string = ''
     for (const key in params) {
-      if (immutable.Seq.isSeq(params[key])) {
+      if (immutable.Iterable.isIterable(params[key])) {
         params[key].forEach(x => (params_string += '&' + key + '=' + x))
-      } else {
+      } else if (params[key] != null) {
         params_string += '&' + key + '=' + params[key]
       }
     }
@@ -47,6 +47,9 @@ const search = rateLimit(80, 1000, async function(term, currency, params) {
       console.info('x-ratelimit-remaining', r.header['x-ratelimit-remaining'])
       if (r.status !== 200) {
         console.error(r.status)
+      }
+      if (r.body == null || r.body.result == null) {
+        console.error(r)
       }
       return immutable.fromJS(r.body.result.transData || r.body.result.data)
     })
@@ -180,7 +183,6 @@ function paramsFromElectroGrammar(q) {
   }
   const params = {
     'attributes[package][]': size,
-    'attributes[Mounting+Type][]': 'Surface+MountType',
     current_page: '1',
     in_stock: 'false',
     is_RoHS: 'false',
@@ -282,7 +284,7 @@ async function parametricSearch(q, currencies) {
     currencies,
     params
   )
-  if (results.size === 0) {
+  if (results.size === 0 && q.getIn(['electro_grammar', 'ignored'])) {
     results = await searchAcrossCurrencies('', currencies, params)
   }
   return results
