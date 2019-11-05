@@ -101,15 +101,23 @@ async function searchAcrossCurrencies(term, currencies, params) {
     .reduce((merged, result) => {
       // merge the different offers for the same MPN
       const mpn = result.get('mpn')
-      const offers = immutable.List.of(result.remove('mpn').remove('datasheet'))
+      const offers = immutable.List.of(
+        result
+          .remove('mpn')
+          .remove('datasheet')
+          .remove('image')
+          .remove('specs')
+      )
       const existing = merged.findIndex(r => r.get('mpn').equals(mpn))
       if (existing >= 0) {
         merged = merged.updateIn([existing, 'offers'], os => os.concat(offers))
       } else {
         const datasheet = result.get('datasheet')
         const description = result.get('description')
+        const image = result.get('image')
+        const specs = result.get('specs')
         merged = merged.push(
-          immutable.Map({mpn, datasheet, description, offers})
+          immutable.Map({mpn, datasheet, image, specs, description, offers})
         )
       }
       return merged
@@ -129,10 +137,18 @@ function processResult(result) {
   const moq = result.getIn(['info', 'min'])
   const order_multiple = result.getIn(['info', 'step'])
   const product_url = 'https://lcsc.com' + result.get('url')
-  console.log(result)
+  let image
+  if (result.getIn(['images', 0, '96x96']) != null) {
+    image = {
+      url: result.getIn(['images', 0, '96x96']),
+      credit_string: 'LCSC',
+      credit_url: 'https://lcsc.com',
+    }
+  }
   return immutable.fromJS({
     mpn,
     datasheet,
+    image,
     sku,
     prices,
     description,
@@ -277,7 +293,6 @@ function paramsFromElectroGrammar(q) {
 
 async function parametricSearch(q, currencies) {
   const params = paramsFromElectroGrammar(q)
-  console.log({params})
   if (params == null) {
     return searchAcrossCurrencies(q.get('term'), currencies)
   }
