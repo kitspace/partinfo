@@ -42,6 +42,7 @@ const manufacturer_map = immutable.Map({
   EATON: 'Eaton',
   ELNA: 'Elna',
   EMTEK: 'Emtek',
+  'Everlight Elec': 'Everlight',
   FLUKE: 'Fluke',
   FOXCONN: 'Foxconn',
   FUJITSU: 'Fujitsu',
