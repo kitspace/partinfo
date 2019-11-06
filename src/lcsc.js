@@ -63,11 +63,10 @@ const skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
     .then(r => {
       const $ = cheerio.load(r.text)
       const part = $('.detail-mpn-title').text()
-      const manufacturer = $('.detail-brand-title').text()
       if (!part) {
         return null
       }
-      return searchAcrossCurrencies(manufacturer + ' ' + part, currencies)
+      return searchAcrossCurrencies(part, currencies)
     })
     .then(parts => {
       return immutable.List.of(
