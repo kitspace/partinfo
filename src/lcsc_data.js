@@ -58,6 +58,7 @@ const manufacturer_map = immutable.Map({
   KAMAYA: 'Kamaya',
   'Linear Tech': 'Linear Technology',
   'MA/COM': 'MA-COM',
+  'MDD（Microdiode Electronics）': 'MDD',
   MEMSIC: 'Memsic',
   'METZ CONNECT GmbH': 'Metz Connect',
   MOLEX: 'Molex',
