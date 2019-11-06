@@ -106,7 +106,6 @@ async function searchAcrossCurrencies(term, currencies, params) {
         result
           .remove('mpn')
           .remove('datasheet')
-          .remove('image')
           .remove('specs')
       )
       const existing = merged.findIndex(r => r.get('mpn').equals(mpn))
