@@ -356,11 +356,14 @@ function lcsc(queries) {
       let response
       if (term != null) {
         response = await parametricSearch(q, currencies)
+        response = response.map(r => r.set('type', 'search'))
       } else if (mpn != null) {
         const s = (mpn.get('manufacturer') + ' ' + mpn.get('part')).trim()
         response = await searchAcrossCurrencies(s, currencies)
+        response = response.map(r => r.set('type', 'match'))
       } else if (is_lcsc_sku) {
         response = await skuMatch(sku.get('part'), currencies)
+        response = response.map(r => r.set('type', 'match'))
       }
       return [q, response]
     })
