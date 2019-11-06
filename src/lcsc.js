@@ -337,16 +337,12 @@ async function parametricSearch(q, currencies) {
 function lcsc(queries) {
   return Promise.all(
     queries.map(async q => {
-      const empty = immutable.List()
       const currencies = getCurrencies(q)
       const retailers = getRetailers(q)
       const term = q.get('term')
       const mpn = q.get('mpn')
       const sku = q.get('sku')
       const is_lcsc_sku = sku != null && sku.get('vendor') === 'LCSC'
-      if (!retailers.includes('LCSC') && !is_lcsc_sku) {
-        return [q, empty]
-      }
       let response
       if (term != null) {
         response = await parametricSearch(q, currencies)
