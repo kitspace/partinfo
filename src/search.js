@@ -82,8 +82,8 @@ function merge(octopart_responses, lcsc_responses) {
         const lcsc_part = lcsc_response.find(p =>
           p.get('mpn').equals(part.get('mpn'))
         )
-        const lcsc_offers = lcsc_part.get('offers')
-        if (lcsc_part != null && lcsc_offers.size > 0) {
+        if (lcsc_part != null && lcsc_part.get('offers').size > 0) {
+          const lcsc_offers = lcsc_part.get('offers')
           remaining_lcsc = remaining_lcsc.update(query, r =>
             r.filterNot(p => p.get('mpn').equals(part.get('mpn')))
           )

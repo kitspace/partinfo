@@ -189,6 +189,9 @@ function processResult(result) {
 
 function getPrices(result) {
   const lcsc_prices = result.get('price')
+  if (lcsc_prices == null) {
+    return immutable.Map()
+  }
   const currency = symbol_to_currency.get(lcsc_prices.getIn([0, 3]))
   const prices = lcsc_prices.map(p => immutable.List.of(p.get(0), p.get(2)))
   return immutable.Map([[currency, prices]])
