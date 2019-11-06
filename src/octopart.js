@@ -230,8 +230,12 @@ async function octopart(queries) {
   const groups = splitIntoChunks(part_match_queries, 20)
 
   return Promise.all(
-    groups.concat(search_queries).map(q =>
-      run(q).then(r => {
+    groups.concat(search_queries).map(async q => {
+      if (q.seller === 'LCSC') {
+        //LCSC will know more about this, give an empty response
+        return [q, immutable.List()]
+      }
+      return run(q).then(r => {
         if (
           q.filters &&
           q.filters.length > 0 &&
@@ -244,7 +248,7 @@ async function octopart(queries) {
         }
         return [q, r]
       })
-    )
+    })
   )
     .then(cacheResponses)
     .then(responses =>
