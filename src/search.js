@@ -82,18 +82,30 @@ function merge(octopart_responses, lcsc_responses) {
         const lcsc_part = lcsc_response.find(p =>
           p.get('mpn').equals(part.get('mpn'))
         )
-        if (lcsc_part != null && lcsc_part.get('offers')) {
+        const lcsc_offers = lcsc_part.get('offers')
+        if (lcsc_part != null && lcsc_offers.size > 0) {
           remaining_lcsc = remaining_lcsc.update(query, r =>
             r.filterNot(p => p.get('mpn').equals(part.get('mpn')))
           )
           // overwrite octopart offer data with the more up-to-date better data from lcsc
-          const lcsc_offers = lcsc_part.get('offers')
           const lcsc_skus = lcsc_offers.map(o => o.get('sku'))
           const offers = part
             .get('offers')
             .filter(o => !lcsc_skus.find(sku => sku.equals(o.get('sku'))))
             .concat(lcsc_offers)
           part = part.set('offers', offers)
+          if (!part.get('description')) {
+            part = part.set('description', lcsc_part.get('description'))
+          }
+          if (!part.get('specs') || part.get('specs').size === 0) {
+            part = part.set('specs', lcsc_part.get('specs'))
+          }
+          if (!part.get('datasheet')) {
+            part = part.set('datasheet', lcsc_part.get('datasheet'))
+          }
+          if (!part.get('image')) {
+            part = part.set('image', lcsc_part.get('image'))
+          }
         }
         return part
       })
