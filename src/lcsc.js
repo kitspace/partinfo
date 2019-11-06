@@ -64,18 +64,22 @@ const skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
       const $ = cheerio.load(r.text)
       const part = $('.detail-mpn-title').text()
       const manufacturer = $('.detail-brand-title').text()
+      if (!part) {
+        return null
+      }
       return searchAcrossCurrencies(manufacturer + ' ' + part, currencies)
     })
-    .then(parts =>
-      immutable.List.of(
-        parts.find(part => {
-          const offer = part
-            .get('offers')
-            .find(o => o.getIn(['sku', 'part']) === sku)
-          return offer != null
-        })
-      )
-    )
+    .then(parts => {
+      return immutable.List.of(
+        parts &&
+          parts.find(part => {
+            const offer = part
+              .get('offers')
+              .find(o => o.getIn(['sku', 'part']) === sku)
+            return offer != null
+          })
+      ).filter(x => x)
+    })
 })
 
 async function searchAcrossCurrencies(term, currencies, params) {
