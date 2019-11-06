@@ -89,6 +89,7 @@ const manufacturer_map = immutable.Map({
   'TANCAP Tech': 'Tancap Technology',
   'TLC Electronic': 'TLC Electronics',
   TOSHIBA: 'Toshiba',
+  'Uniroyal Elec': 'Uniroyal',
   'Vishay Intertech': 'Vishay',
   'Vishay Micro-Measurements': 'Vishay Micro Measurements',
   WIZNET: 'WIZnet',

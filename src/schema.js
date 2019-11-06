@@ -50,6 +50,7 @@ const typeDefs = `
     multipack_quantity : Int
     order_multiple     : Int
     product_url        : String
+    jlc_assembly       : String
   }
 
   type Prices {
