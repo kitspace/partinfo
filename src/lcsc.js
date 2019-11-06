@@ -25,7 +25,7 @@ const search = rateLimit(80, 1000, async function(term, currency, params) {
   let url, params_string
   if (params == null) {
     url = 'https://lcsc.com/api/global/search'
-    params_string = `q=${term}&page=1&order=`
+    params_string = `q=${encodeURIComponent(term)}&page=1&order=`
   } else {
     url = 'https://lcsc.com/api/products/search'
     params.search_content = term
@@ -347,6 +347,9 @@ function lcsc(queries) {
       const mpn = q.get('mpn')
       const sku = q.get('sku')
       const is_lcsc_sku = sku != null && sku.get('vendor') === 'LCSC'
+      if (sku != null && !is_lcsc_sku) {
+        return [q, immutable.List()]
+      }
       let response
       if (term != null) {
         response = await parametricSearch(q, currencies)
