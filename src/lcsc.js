@@ -5,7 +5,7 @@ const redis = require('redis')
 const cheerio = require('cheerio')
 
 const {getRetailers, getCurrencies} = require('./queries')
-
+const jlc_assembly_map = require('./jlc_assembly.json')
 const {
   currency_cookies,
   symbol_to_currency,
@@ -129,6 +129,7 @@ function processResult(result) {
   const mpn = getMpn(result)
   const datasheet = result.getIn(['datasheet', 'pdf'])
   const sku = getSku(result)
+  const jlc_assembly = jlc_assembly_map[sku.get('part')]
   const prices = getPrices(result)
   const description = result
     .get('description')
@@ -183,6 +184,7 @@ function processResult(result) {
     moq,
     order_multiple,
     product_url,
+    jlc_assembly,
   })
 }
 
