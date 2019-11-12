@@ -425,6 +425,10 @@ function mergeSimilarParts(parts) {
   return parts
 }
 
+const manufacturer_map = immutable.Map({
+  'GCT': 'Global Connector Technology'
+})
+
 function toPart(query, item) {
   let specs = immutable
     .Map(item.specs)
@@ -438,7 +442,7 @@ function toPart(query, item) {
     .toList()
   specs = sortByImportance(specs)
   const number = item.mpn
-  const manufacturer = item.brand.name
+  const manufacturer = manufacturer_map.get(item.brand.name) || item.brand.name
   return immutable.Map({
     mpn: immutable.Map({
       part: number,
