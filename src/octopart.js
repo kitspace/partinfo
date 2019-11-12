@@ -314,7 +314,7 @@ async function octopart(queries) {
                 .some(offer => offer.get('sku').equals(query_sku))
             )
           }
-          response = newParts || previous
+          response = mergeSimilarParts(newParts.concat(previous))
         }
         return previousResults.set(query, response)
       }, immutable.Map())
