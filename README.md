@@ -1,6 +1,6 @@
 # Kitspace Partinfo 
 
-[![Build Status](https://travis-ci.org/kitspace/partinfo?branch=dev)](https://travis-ci.org/kitspace/partinfo)
+[![Build Status](https://api.travis-ci.org/kitspace/partinfo.svg?branch=dev)](https://travis-ci.org/kitspace/partinfo?branch=dev)
 
 A microservice to get information on electronic components. This is used on [kitspace.org](https://kitspace.org) to get the part information for the BOM popups on project pages and for the [BOM Builder](https://bom-builder.kitspace.org).
 
