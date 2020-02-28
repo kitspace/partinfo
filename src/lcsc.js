@@ -1,8 +1,12 @@
 const immutable = require('immutable')
 const rateLimit = require('promise-rate-limit')
 const superagent = require('superagent')
-const redis = require('redis')
 const cheerio = require('cheerio')
+const Redis = require('ioredis')
+
+const {LCSC_CACHE_TIMEOUT_S} = require('../config')
+
+const redis = new Redis()
 
 const {getRetailers, getCurrencies} = require('./queries')
 const jlc_assembly_map = require('./jlc_assembly.json')
@@ -21,7 +25,7 @@ const {
   spec_map,
 } = require('./lcsc_data')
 
-const search = rateLimit(80, 1000, async function(term, currency, params) {
+const _search = rateLimit(80, 1000, async function(term, currency, params) {
   let url, params_string
   if (params == null) {
     url = 'https://lcsc.com/api/global/search'
@@ -55,6 +59,22 @@ const search = rateLimit(80, 1000, async function(term, currency, params) {
       return immutable.fromJS(r.body.result.transData || r.body.result.data)
     })
 })
+
+function toKey(...args) {
+  return 'lcsc:' + immutable.fromJS(args).hashCode()
+}
+
+async function search(term, currency, params) {
+  const key = toKey(term, currency, params)
+  const cached = await redis.get(key)
+  if (cached != null) {
+    return immutable.fromJS(JSON.parse(cached))
+  }
+  return _search(term, currency, params).then(async r => {
+    await redis.set(key, JSON.stringify(r), 'EX', LCSC_CACHE_TIMEOUT_S)
+    return r
+  })
+}
 
 const _skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
   const url = 'https://lcsc.com/pre_search/link?type=lcsc&&value=' + sku

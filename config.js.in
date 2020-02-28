@@ -20,4 +20,6 @@ module.exports = {
   ELEMENT14_CACHE_TIMEOUT_S: 24 * 60 * 60, // 24 hours
   // how long before the RS cache entries expire, in seconds
   RS_CACHE_TIMEOUT_S: 24 * 60 * 60, // 24 hours
+  // how long before the LCSC cache entries expire, in seconds
+  LCSC_CACHE_TIMEOUT_S: 24 * 60 * 60, // 24 hours
 }
