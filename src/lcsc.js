@@ -56,7 +56,7 @@ const search = rateLimit(80, 1000, async function(term, currency, params) {
     })
 })
 
-const skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
+const _skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
   const url = 'https://lcsc.com/pre_search/link?type=lcsc&&value=' + sku
   return superagent
     .get(url)
@@ -80,6 +80,18 @@ const skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
       ).filter(x => x)
     })
 })
+
+async function skuMatch(sku, currencies) {
+  const key = toKey(sku, currencies)
+  const cached = await redis.get(key)
+  if (cached != null) {
+    return immutable.fromJS(JSON.parse(cached))
+  }
+  return _skuMatch(sku, currencies).then(async r => {
+    await redis.set(key, JSON.stringify(r), 'EX', LCSC_CACHE_TIMEOUT_S)
+    return r
+  })
+}
 
 async function searchAcrossCurrencies(term, currencies, params) {
   if (currencies == null || currencies.size === 0) {
@@ -355,7 +367,9 @@ function lcsc(queries) {
       const term = q.get('term')
       const mpn = q.get('mpn')
       const sku = q.get('sku')
-      const is_lcsc_sku = sku != null && sku.get('vendor') === 'LCSC'
+      const is_lcsc_sku =
+        sku != null &&
+        (sku.get('vendor') === 'LCSC' || sku.get('vendor') === 'JLC Assembly')
       if (sku != null && !is_lcsc_sku) {
         return [q, immutable.List()]
       }
