@@ -51,10 +51,11 @@ const _search = rateLimit(80, 1000, async function(term, currency, params) {
     .then(r => {
       console.info('x-ratelimit-remaining', r.header['x-ratelimit-remaining'])
       if (r.status !== 200) {
-        console.error(r.status)
+        console.error('LCSC network error:' , r.status)
       }
       if (r.body == null || r.body.result == null) {
-        console.error(r)
+        console.error('LCSC no result')
+        return immutable.List()
       }
       return immutable.fromJS(r.body.result.transData || r.body.result.data)
     })
