@@ -37,8 +37,10 @@ function search(queries) {
       let rs = await octopart(further_octopart)
       rs = rs.entrySeq().reduce((rs, [query, response]) => {
         query = query.get('original_query')
+        const type = query.get('term') ? 'search' : 'match'
+        response = response.map(r => r.set('type', type))
         if (rs.get(query)) {
-          rs.update(query, rs => rs.concat(response))
+          rs = rs.update(query, rs => rs.concat(response))
         }
         return rs.set(query, response)
       }, immutable.Map())
