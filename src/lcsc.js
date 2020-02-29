@@ -51,7 +51,7 @@ const _search = rateLimit(80, 1000, async function(term, currency, params) {
     .then(r => {
       console.info('x-ratelimit-remaining', r.header['x-ratelimit-remaining'])
       if (r.status !== 200) {
-        console.error('LCSC network error:' , r.status)
+        console.error('LCSC network error:', r.status)
       }
       if (r.body == null || r.body.result == null) {
         console.error('LCSC no result')
@@ -380,6 +380,36 @@ async function mpnMatch(mpn, currencies) {
   return response.filter(r => r.getIn(['mpn', 'part']) === part)
 }
 
+const searchJlcAssembly = rateLimit(80, 1000, async (q, currencies) => {
+  const keyword = encodeURIComponent(q.get('term')).replace('%20', '+')
+  const url =
+    'https://jlcpcb.com/shoppingCart/smtGood/selectSmtComponentList' +
+    `?currentPage=1&pageSize=10&keyword=${keyword}&secondeSortName=&componentSpecification=&componentLibraryType=`
+  const r = await superagent.post(url)
+  const skus = r.body.data.list.map(x => x.componentCode)
+
+  let results = await Promise.all(
+    skus.map(sku => skuMatch(sku, currencies))
+  ).then(rs => immutable.List(rs).flatten(1))
+  console.log('searchJlcAssembly', results.map(p => p.get('mpn')))
+  return results
+})
+
+function mergeResults(x, y) {
+  return x.concat(y).reduce((merged, result) => {
+    // merge the different offers for the same MPN
+    const mpn = result.get('mpn')
+    const offers = result.get('offers')
+    const existing = merged.findIndex(
+      r => (console.log(r), r.get('mpn').equals(mpn))
+    )
+    if (existing >= 0) {
+      return merged
+    }
+    return merged.push(result)
+  }, immutable.List())
+}
+
 function lcsc(queries) {
   return Promise.all(
     queries.map(async q => {
@@ -396,7 +426,10 @@ function lcsc(queries) {
       }
       let response
       if (term != null) {
-        response = await parametricSearch(q, currencies)
+        response = await Promise.all([
+          searchJlcAssembly(q, currencies),
+          parametricSearch(q, currencies),
+        ]).then(([jlc, lcsc]) => mergeResults(jlc, lcsc))
         response = response.map(r => r.set('type', 'search'))
       } else if (mpn != null) {
         response = await mpnMatch(mpn, currencies)
