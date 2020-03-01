@@ -384,7 +384,7 @@ async function mpnMatch(mpn, currencies) {
   return response.filter(r => r.getIn(['mpn', 'part']) === part)
 }
 
-const searchJlcAssembly = rateLimit(80, 60000, async (q, currencies) => {
+const _searchJlcAssembly = rateLimit(80, 60000, async (q, currencies) => {
   const keyword = encodeURIComponent(q.get('term')).replace('%20', '+')
   const url =
     'https://jlcpcb.com/shoppingCart/smtGood/selectSmtComponentList' +
@@ -397,6 +397,20 @@ const searchJlcAssembly = rateLimit(80, 60000, async (q, currencies) => {
   ).then(rs => immutable.List(rs).flatten(1))
   return results
 })
+
+function searchJlcAssembly(q, currencies) {
+  const key = toKey('jlc ' + q.get(term))
+  const cached = await redis.get(key)
+  if (cached != null) {
+    return immutable.fromJS(JSON.parse(cached))
+  }
+  return _searchJlcAssembly(q, currencies).then(async r => {
+    if (r != null) {
+      await redis.set(key, JSON.stringify(r), 'EX', LCSC_CACHE_TIMEOUT_S)
+    }
+    return r
+  })
+}
 
 function mergeResults(x, y) {
   return x.concat(y).reduce((merged, result) => {
