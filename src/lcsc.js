@@ -266,7 +266,7 @@ function getPrices(result) {
 function getSku(result) {
   return immutable.Map({
     vendor: 'LCSC',
-    part: result.get('number'),
+    part: result.get('number').replace(/<.*?>/g, ''),
   })
 }
 
