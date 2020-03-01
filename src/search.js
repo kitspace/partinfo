@@ -13,7 +13,9 @@ function search(queries) {
             return offers.reduce((offers, o) => {
               const jlc = o.get('jlc_assembly')
               if (jlc != null) {
-                offers = offers.push(o.setIn(['sku', 'vendor'], 'JLC Assembly'))
+                o = o.setIn(['sku', 'vendor'], 'JLC Assembly')
+                o = o.set('in_stock_quantity', null)
+                offers = offers.push(o)
               }
               return offers.push(o)
             }, immutable.List())
