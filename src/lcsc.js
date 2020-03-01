@@ -398,8 +398,8 @@ const _searchJlcAssembly = rateLimit(80, 120000, async (q, currencies) => {
   return results
 })
 
-function searchJlcAssembly(q, currencies) {
-  const key = toKey('jlc ' + q.get(term))
+async function searchJlcAssembly(q, currencies) {
+  const key = toKey('jlc ' + q.get('term'))
   const cached = await redis.get(key)
   if (cached != null) {
     return immutable.fromJS(JSON.parse(cached))
