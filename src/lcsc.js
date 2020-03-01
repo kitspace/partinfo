@@ -122,10 +122,10 @@ async function searchAcrossCurrencies(term, currencies, params) {
   if (currencies == null || currencies.size === 0) {
     currencies = immutable.List.of('USD')
   }
-  const responses = await Promise.all(
+  let responses = await Promise.all(
     currencies.map(c => search(term, c, params))
   ).then(rs => immutable.List(rs).flatten(1))
-  return responses
+  responses = responses
     .reduce((merged, result) => {
       // merge the prices that are in different currencies
       result = processResult(result)
@@ -162,6 +162,24 @@ async function searchAcrossCurrencies(term, currencies, params) {
       }
       return merged
     }, immutable.List())
+  return Promise.all(
+    responses.map(async part => {
+      let offers = part.get('offers')
+      offers = await Promise.all(
+        offers.map(async offer => {
+          if (offer.get('jlc_assembly') != null) {
+            const sku = offer.getIn(['sku', 'part'])
+            const jlc_offer = (await _searchJlcAssembly(sku))[0] || {}
+            if (jlc_offer.componentCode === sku) {
+              offer = offer.set('jlc_stock_quantity', jlc_offer.stockCount)
+            }
+          }
+          return offer
+        })
+      )
+      return part.set('offers', offers)
+    })
+  ).then(immutable.List)
 }
 
 function processResult(result) {
@@ -384,35 +402,35 @@ async function mpnMatch(mpn, currencies) {
   return response.filter(r => r.getIn(['mpn', 'part']) === part)
 }
 
-const _searchJlcAssembly = rateLimit(80, 120000, async (q, currencies) => {
-  const keyword = encodeURIComponent(q.get('term')).replace('%20', '+')
+const __searchJlcAssembly = rateLimit(80, 120000, keyword => {
+  keyword = encodeURIComponent(keyword).replace('%20', '+')
   const url =
     'https://jlcpcb.com/shoppingCart/smtGood/selectSmtComponentList' +
     `?currentPage=1&pageSize=10&keyword=${keyword}&secondeSortName=&componentSpecification=&componentLibraryType=`
-  const r = await superagent.post(url)
-
-  let results = Promise.all(
-    r.body.data.list.map(({componentCode, stockCount}) =>
-      skuMatch(componentCode, currencies).then(ps =>
-        ps.map(p => p.set('jlc_stock_quantity', stockCount))
-      )
-    )
-  ).then(rs => immutable.List(rs).flatten(1))
-  return results
+  return superagent.post(url).then(r => r.body.data.list)
 })
 
-async function searchJlcAssembly(q, currencies) {
-  const key = toKey('jlc ' + q.get('term'))
+async function _searchJlcAssembly(keyword) {
+  const key = toKey('jlc_assembly-' + keyword)
   const cached = await redis.get(key)
   if (cached != null) {
-    return immutable.fromJS(JSON.parse(cached))
+    return JSON.parse(cached)
   }
-  return _searchJlcAssembly(q, currencies).then(async r => {
+  return __searchJlcAssembly(keyword).then(async r => {
     if (r != null) {
       await redis.set(key, JSON.stringify(r), 'EX', LCSC_CACHE_TIMEOUT_S)
     }
     return r
   })
+}
+
+async function searchJlcAssembly(q, currencies) {
+  const keyword = q.get('term')
+  const jlc = await _searchJlcAssembly(keyword)
+  let results = Promise.all(
+    jlc.map(({componentCode}) => skuMatch(componentCode, currencies))
+  ).then(rs => immutable.List(rs).flatten(1))
+  return results
 }
 
 function mergeResults(x, y) {
