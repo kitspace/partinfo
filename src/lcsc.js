@@ -169,8 +169,9 @@ async function searchAcrossCurrencies(term, currencies, params) {
         offers.map(async offer => {
           if (offer.get('jlc_assembly') != null) {
             const sku = offer.getIn(['sku', 'part'])
-            const jlc_offer = (await _searchJlcAssembly(sku))[0] || {}
-            if (jlc_offer.componentCode === sku) {
+            const jlc_offers = await _searchJlcAssembly(sku)
+            const jlc_offer = jlc_offers.find(o => o.componentCode === sku)
+            if (jlc_offer != null) {
               offer = offer.set('jlc_stock_quantity', jlc_offer.stockCount)
             }
           }
