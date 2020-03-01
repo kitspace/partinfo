@@ -414,7 +414,7 @@ const __searchJlcAssembly = rateLimit(80, 120000, keyword => {
   keyword = encodeURIComponent(keyword).replace('%20', '+')
   const url =
     'https://jlcpcb.com/shoppingCart/smtGood/selectSmtComponentList' +
-    `?currentPage=1&pageSize=10&keyword=${keyword}&secondeSortName=&componentSpecification=&componentLibraryType=`
+    `?currentPage=1&pageSize=100&keyword=${keyword}&secondeSortName=&componentSpecification=&componentLibraryType=`
   return superagent.post(url).then(r => r.body.data.list)
 })
 
