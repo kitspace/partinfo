@@ -25,7 +25,7 @@ const {
   spec_map,
 } = require('./lcsc_data')
 
-const _search = rateLimit(80, 1000, async function(term, currency, params) {
+const _search = rateLimit(80, 60000, async function(term, currency, params) {
   let url, params_string
   if (params == null) {
     url = 'https://lcsc.com/api/global/search'
@@ -79,7 +79,7 @@ async function search(term, currency, params) {
   })
 }
 
-const _skuMatch = rateLimit(80, 1000, async function(sku, currencies) {
+const _skuMatch = rateLimit(80, 60000, async function(sku, currencies) {
   const url = 'https://lcsc.com/pre_search/link?type=lcsc&&value=' + sku
   return superagent
     .get(url)
@@ -384,7 +384,7 @@ async function mpnMatch(mpn, currencies) {
   return response.filter(r => r.getIn(['mpn', 'part']) === part)
 }
 
-const searchJlcAssembly = rateLimit(80, 1000, async (q, currencies) => {
+const searchJlcAssembly = rateLimit(80, 60000, async (q, currencies) => {
   const keyword = encodeURIComponent(q.get('term')).replace('%20', '+')
   const url =
     'https://jlcpcb.com/shoppingCart/smtGood/selectSmtComponentList' +
