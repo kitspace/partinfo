@@ -110,9 +110,9 @@ async function skuMatch(sku, currencies) {
   if (cached != null) {
     return immutable.fromJS(JSON.parse(cached))
   }
-  return _skuMatch(sku, currencies).then(async r => { 
-    if (r != null) {	   
-	    await redis.set(key, JSON.stringify(r), 'EX', LCSC_CACHE_TIMEOUT_S)
+  return _skuMatch(sku, currencies).then(async r => {
+    if (r != null) {
+      await redis.set(key, JSON.stringify(r), 'EX', LCSC_CACHE_TIMEOUT_S)
     }
     return r
   })
@@ -391,12 +391,10 @@ const searchJlcAssembly = rateLimit(80, 1000, async (q, currencies) => {
     `?currentPage=1&pageSize=10&keyword=${keyword}&secondeSortName=&componentSpecification=&componentLibraryType=`
   const r = await superagent.post(url)
   const skus = r.body.data.list.map(x => x.componentCode)
-  console.log({skus})
 
   let results = await Promise.all(
     skus.map(sku => skuMatch(sku, currencies))
   ).then(rs => immutable.List(rs).flatten(1))
-  console.log('searchJlcAssembly', results.map(p => p.get('mpn')))
   return results
 })
 
@@ -405,9 +403,7 @@ function mergeResults(x, y) {
     // merge the different offers for the same MPN
     const mpn = result.get('mpn')
     const offers = result.get('offers')
-    const existing = merged.findIndex(
-      r => (r.get('mpn').equals(mpn))
-    )
+    const existing = merged.findIndex(r => r.get('mpn').equals(mpn))
     if (existing >= 0) {
       return merged
     }
@@ -434,7 +430,7 @@ function lcsc(queries) {
         response = await Promise.all([
           searchJlcAssembly(q, currencies),
           parametricSearch(q, currencies),
-        ]).then(([jlc, lcsc]) => (mergeResults(jlc, lcsc)))
+        ]).then(([jlc, lcsc]) => mergeResults(jlc, lcsc))
         response = response.map(r => r.set('type', 'search'))
       } else if (mpn != null) {
         response = await mpnMatch(mpn, currencies)
