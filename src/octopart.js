@@ -60,9 +60,9 @@ function transform(queries) {
 
 const run = rateLimit(3, 1000, async function(query) {
   const limit = await limiter.get({id: 'dev-partinfo'})
-  if (limit.remaining === 0) {
-    throw new Error('Octpart query limit reached.')
-  }
+  //if (limit.remaining === 0) {
+  //  throw new Error('Octpart query limit reached.')
+  //}
   if (immutable.List.isList(query)) {
     return superagent
       .get('https://octopart.com/api/v3/parts/match')
