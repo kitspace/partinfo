@@ -6,22 +6,6 @@ const {getRetailers} = require('./queries')
 function search(queries) {
   return Promise.all([octopart(queries), lcsc(queries)]).then(
     async ([octopart_responses, lcsc_responses]) => {
-      // duplicate jlc assembly parts as separate offers
-      lcsc_responses = lcsc_responses.map(responses =>
-        responses.map(response => {
-          return response.update('offers', offers => {
-            return offers.reduce((offers, o) => {
-              const jlc = o.get('jlc_assembly')
-              if (jlc != null) {
-                o = o.setIn(['sku', 'vendor'], 'JLC Assembly')
-                o = o.set('in_stock_quantity', o.get('jlc_stock_quantity'))
-                offers = offers.push(o)
-              }
-              return offers.push(o)
-            }, immutable.List())
-          })
-        })
-      )
       let [merged, remaining_lcsc] = merge(octopart_responses, lcsc_responses)
 
       // get further octopart information by searching mpns of parts we only found at lcsc

@@ -165,19 +165,26 @@ async function searchAcrossCurrencies(term, currencies, params) {
   return Promise.all(
     responses.map(async part => {
       let offers = part.get('offers')
+      offers = offers.reduce((offers, o) => {
+        //duplicate offers for jlc assembly
+        if (o.get('jlc_assembly') != null) {
+          offers = offers.push(o.setIn(['sku', 'vendor'], 'JLC Assembly'))
+        }
+        return offers.push(o)
+      }, immutable.List())
       offers = await Promise.all(
         offers.map(async offer => {
-          if (offer.get('jlc_assembly') != null) {
+          if (offer.getIn(['sku', 'vendor']) === 'JLC Assembly') {
             const sku = offer.getIn(['sku', 'part'])
             const jlc_offers = await _searchJlcAssembly(sku)
             const jlc_offer = jlc_offers.find(o => o.componentCode === sku)
             if (jlc_offer != null) {
-              offer = offer.set('jlc_stock_quantity', jlc_offer.stockCount)
+              offer = offer.set('in_stock_quantity', jlc_offer.stockCount)
             }
           }
           return offer
         })
-      )
+      ).then(immutable.List)
       return part.set('offers', offers)
     })
   ).then(immutable.List)
