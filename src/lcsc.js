@@ -390,10 +390,13 @@ const _searchJlcAssembly = rateLimit(80, 120000, async (q, currencies) => {
     'https://jlcpcb.com/shoppingCart/smtGood/selectSmtComponentList' +
     `?currentPage=1&pageSize=10&keyword=${keyword}&secondeSortName=&componentSpecification=&componentLibraryType=`
   const r = await superagent.post(url)
-  const skus = r.body.data.list.map(x => x.componentCode)
 
-  let results = await Promise.all(
-    skus.map(sku => skuMatch(sku, currencies))
+  let results = Promise.all(
+    r.body.data.list.map(({componentCode, stockCount}) =>
+      skuMatch(componentCode, currencies).then(ps =>
+        ps.map(p => p.set('jlc_stock_quantity', stockCount))
+      )
+    )
   ).then(rs => immutable.List(rs).flatten(1))
   return results
 })

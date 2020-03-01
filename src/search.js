@@ -14,7 +14,7 @@ function search(queries) {
               const jlc = o.get('jlc_assembly')
               if (jlc != null) {
                 o = o.setIn(['sku', 'vendor'], 'JLC Assembly')
-                o = o.set('in_stock_quantity', 1000000)
+                o = o.set('in_stock_quantity', o.get('jlc_stock_quantity'))
                 offers = offers.push(o)
               }
               return offers.push(o)
