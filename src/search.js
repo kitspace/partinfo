@@ -49,6 +49,16 @@ function search(queries) {
             )
           return response.map(filterOffers)
         })
+        .map((response, query) => {
+          // filter out parts that do not have the sku from the query
+          const sku = query.get('sku')
+          if (sku) {
+            response = response.filter(parts =>
+              parts.get('offers').find(o => o.get('sku').equals(sku))
+            )
+          }
+          return response
+        })
         .mapEntries(([query, response]) => {
           if (!query.get('term') && immutable.List.isList(response)) {
             return [query, response.first()]
