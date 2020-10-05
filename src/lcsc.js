@@ -25,6 +25,29 @@ const {
   spec_map,
 } = require('./lcsc_data')
 
+const getToken = rateLimit(80, 120000, async function() {
+  const r = await superagent.get('https://lcsc.com/search')
+  const cookie = r.headers['set-cookie'].reduce(
+    (cookie, x) =>
+      /currency_symbol/.test(x) ? cookie : cookie + x.split(';')[0] + '; ',
+    ''
+  )
+  const $ = cheerio.load(r.text)
+  let token
+  $('script').each(function(i, elem) {
+    const m = $(this)
+      .contents()
+      .text()
+      .match(/'X-CSRF-TOKEN': '(.*?)'/)
+    if (m != null) {
+      token = m[1]
+    }
+  })
+  return {token, cookie}
+})
+
+
+
 const _search = rateLimit(80, 120000, async function(term, currency, params) {
   let url, params_string
   if (params == null) {
@@ -42,12 +65,13 @@ const _search = rateLimit(80, 120000, async function(term, currency, params) {
       }
     }
   }
+  const {token, cookie} = await getToken()
   return superagent
     .post(url)
     .type('form')
     .query(params_string)
-    .accept('application/json')
-    .set('cookie', currency_cookies.get(currency))
+    .set('cookie', cookie + currency_cookies.get(currency))
+    .set('X-CSRF-TOKEN', token)
     .then(r => {
       console.info('x-ratelimit-remaining', r.header['x-ratelimit-remaining'])
       if (r.status !== 200) {
