@@ -301,14 +301,14 @@ async function octopart(queries) {
         } else {
           let newParts = immutable.List(results.map(i => toPart(query, i)))
           newParts = mergeSimilarParts(newParts)
-          const query_sku = query.get('sku')
-          if (query_sku) {
+          const query_part = query.get(['sku', 'part'])
+          if (query_part) {
             // make sure the queried sku is actually in the offers, else octopart
             // is bullshitting us
             newParts = newParts.filter(part =>
               part
                 .get('offers')
-                .some(offer => offer.get('sku').equals(query_sku))
+                .some(offer => offer.get(['sku', 'part']).replace(/-/g, '') === query_part.replace(/-/g, ''))
             )
           }
           response = newParts.first() || previous
