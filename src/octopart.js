@@ -485,9 +485,6 @@ function offers(item) {
   const offers = immutable.Set(item.offers).map(offer => {
     const vendor = retailer_map.get(offer.seller.name) || offer.seller.name
     let part = offer.sku || ''
-    if (vendor !== 'Digikey') {
-      part = part.replace(/-/g, '')
-    }
     return immutable.fromJS({
       sku: {
         part,
