@@ -1,29 +1,32 @@
 {
-  "name": "kitnic-partinfo",
+  "name": "kitspace-partinfo",
   "version": "1.0.0",
   "license": "CPAL-1.0",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "forever src/server.js",
     "test": "npm run test:integration",
-    "test:integration": "mocha --timeout 15000 integration/"
+    "test:integration": "mocha --timeout 30000 integration/"
   },
   "dependencies": {
+    "async-ratelimiter": "^1.2.5",
+    "cheerio": "^1.0.0-rc.2",
     "cors": "^2.8.1",
-    "electro-grammar": "https://github.com/monostable/electro-grammar",
+    "electro-grammar": "git+https://github.com/kitspace/electro-grammar#dev2",
     "express": "^4.14.1",
-    "express-graphql": "^0.6.3",
-    "flat": "^4.0.0",
-    "graphql": "^0.9.1",
-    "graphql-tools": "^0.10.0",
+    "express-graphql": "^0.9.0",
+    "forever": "^0.15.3",
+    "graphql": "^14.5.8",
+    "graphql-fields": "^2.0.3",
+    "graphql-tools": "^4.0.5",
     "immutable": "^3.8.1",
-    "osmosis": "^1.1.4",
+    "ioredis": "^4.10.0",
+    "promise-rate-limit": "^0.0.1",
     "redis": "^2.8.0",
-    "redux": "^3.6.0",
     "superagent": "^3.4.3"
   },
   "devDependencies": {
     "graphql-tester": "^0.0.5",
-    "mocha": "^3.2.0",
+    "mocha": "^6.2.2",
     "prettier": "^1.10.2"
   }
 }

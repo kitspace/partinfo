@@ -1,4 +1,5 @@
 const immutable = require('immutable')
+const graphqlFields = require('graphql-fields')
 const graphqlTools = require('graphql-tools')
 const {request_bus, response_bus} = require('./message_bus')
 
@@ -12,15 +13,18 @@ const Sku = `{
     part   : String!
 }`
 
-const schema = `
+const typeDefs = `
   type Mpn ${Mpn}
   input MpnInput ${Mpn}
 
   type Sku ${Sku}
   input SkuInput ${Sku}
 
+  input MpnOrSku {mpn: MpnInput, sku: SkuInput}
+
   type Query {
     part(mpn: MpnInput, sku: SkuInput): Part
+    match(parts: [MpnOrSku]!) : [Part]!
     search(term: String!): [Part]!
   }
 
@@ -29,17 +33,22 @@ const schema = `
      image       : Image
      datasheet   : String
      description : String
-     offers      : [Offer]
      specs       : [Spec]
+     type        : String
+     offers(from: [String]) : [Offer]
   }
 
   type Offer {
-    sku         : Sku
-    prices      : Prices
-    image       : Image
-    description : String
-    specs       : [Spec]
-    stock_info  : [Spec]
+    sku                : Sku
+    prices             : Prices
+    image              : Image
+    description        : String
+    specs              : [Spec]
+    in_stock_quantity  : Int
+    stock_location     : String
+    moq                : Int
+    multipack_quantity : Int
+    product_url        : String
   }
 
   type Prices {
@@ -62,24 +71,39 @@ const schema = `
   }
 `
 
-const resolverMap = {
+const resolvers = {
   Query: {
-    part(_, {mpn, sku}) {
-      if (!(mpn || sku)) {
-        return Error('Mpn or Sku required')
-      }
-      if (sku && sku.vendor !== 'Digikey') {
-        sku.part = sku.part.replace(/-/g, '')
-      }
-      return run({mpn, sku})
+    part(_, {mpn, sku}, __, info) {
+      const fields = getFields(info)
+      return runPart({mpn, sku, fields})
     },
-    search(_, {term}) {
+    match(_, {parts}, __, info) {
+      const fields = getFields(info)
+      return Promise.all(parts.map(part => runPart({fields, ...part})))
+    },
+    search(_, {term}, __, info) {
+      const fields = getFields(info)
+      term = term.trim()
       if (!term) {
         return []
       }
-      return run({term})
+      return run({term, fields})
     },
   },
+}
+
+function runPart({mpn, sku, fields}) {
+  console.info(
+    `got request for ${(mpn && JSON.stringify(mpn)) ||
+      (sku && JSON.stringify(sku))}`
+  )
+  if (!(mpn || sku)) {
+    return Promise.reject(Error('Mpn or Sku required'))
+  }
+  if (sku && sku.vendor !== 'Digikey') {
+    sku.part = sku.part.replace(/-/g, '')
+  }
+  return run({mpn, sku, fields})
 }
 
 function makeId() {
@@ -102,13 +126,42 @@ function run(query) {
       } else if (!r.get('mpn')) {
         return resolve()
       }
+      console.info(
+        `request for ${query.get('term') ||
+          query.getIn(['mpn', 'part']) ||
+          query.getIn(['sku', 'part'])} took ${Date.now() -
+          time_stamped.get('time')} ms`
+      )
       resolve(r.toJS())
     })
     request_bus.emit('request', time_stamped)
   })
 }
 
-module.exports = graphqlTools.makeExecutableSchema({
-  typeDefs: schema,
-  resolvers: resolverMap,
-})
+const offerFields = immutable.List.of('prices', '__arguments')
+
+function getFields(info) {
+  let fields = graphqlFields(info, {}, {processArguments: true})
+
+  // only keep things that will actually change partinfo behaviour
+  fields = immutable
+    .fromJS(fields)
+    .filter((_, k) => k === 'offers')
+    .update(
+      'offers',
+      offers => offers && offers.filter((_, k) => offerFields.includes(k))
+    )
+    .filter(offers => offers.size > 0)
+
+  // coerce and sort to help caching
+  // XXX needs to be updated if more arguments are added
+  fields = fields.updateIn(
+    ['offers', '__arguments', 0, 'from', 'value'],
+    from =>
+      from && (typeof from === 'string' ? immutable.List.of(from) : from.sort())
+  )
+
+  return fields
+}
+
+module.exports = graphqlTools.makeExecutableSchema({typeDefs, resolvers})

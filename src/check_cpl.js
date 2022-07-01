@@ -11,8 +11,11 @@ function checkCPL(queries) {
   return queries.map(query => {
     const term = query.get('term')
     if (term != null) {
-      const c = electroGrammar.parse(term)
-      // pass it to octopart if we don't have a package size
+      const c = electroGrammar.parse(term, {returnIgnored: true})
+      if (c.type) {
+        query = query.set('electro_grammar', immutable.fromJS(c))
+      }
+      // don't try and match it if we don't have a package size
       if (c.size == null) {
         return query
       }
@@ -21,22 +24,14 @@ function checkCPL(queries) {
       const components = cpl[c.type]
 
       const results = ids
-        .map(id => {
-          return components.reduce((prev, r) => {
-            if (prev) {
-              return prev
-            } else if (r.cplid === id) {
-              return r
-            }
-          }, null)
-        })
+        .map(id => components.find(x => x.cplid === id))
         .filter(x => x)
 
-      const mpns = results
-        .reduce((p, r) => p.concat(r.partNumbers), [])
-        .map(mpn => ({mpn}))
-      if (mpns.length > 0) {
-        return query.remove('term').set('multi', immutable.fromJS(mpns))
+      if (results.length > 0) {
+        const mpns = results
+          .reduce((p, r) => p.concat(r.partNumbers), [])
+          .map(mpn => ({mpn}))
+        return query.set('common_parts_matches', immutable.fromJS(mpns))
       }
     }
     return query

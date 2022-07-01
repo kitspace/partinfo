@@ -1,6 +1,5 @@
 const redis = require('redis')
 const immutable = require('immutable')
-const {flatten, unflatten} = require('flat')
 
 const octopart = require('./octopart')
 const runRetailers = require('./retailers')
@@ -11,8 +10,7 @@ const {request_bus, response_bus} = require('./message_bus')
 const QUERY_BATCH_SIZE = 20
 const QUERY_MAX_WAIT_MS = 100 //milliseconds
 
-//24hrs
-const CACHE_TIMEOUT_MS = 24 * 60 * 60 * 1000 //milliseconds
+const {QUERY_CACHE_TIMEOUT_S, QUERY_KEY_PREFIX} = require('../config')
 
 const redisClient = redis.createClient()
 
@@ -42,7 +40,11 @@ function resolveCached(queries) {
     q =>
       new Promise((resolve, reject) => {
         const key = queryToKey(q.get('query'))
+        console.log({key})
         redisClient.get(key, (err, response) => {
+          if (err) {
+            console.error(err)
+          }
           if (response) {
             response_bus.emit(q.getIn(['query', 'id']), fromRedis(response))
             return resolve(null)
@@ -59,9 +61,10 @@ function resolveCached(queries) {
 
 function requestNew(queries) {
   queries = queries.map(q => q.get('query'))
-  console.log('requestNew', queries.toJS())
+  console.info('requestNew', queries.toJS())
   queries = checkCPL(queries)
   octopart(queries)
+    .then(runRetailers)
     .then(results => {
       cache(results)
       results.forEach((v, k) => {
@@ -75,7 +78,7 @@ function cache(responses) {
   responses.forEach((v, query) => {
     const key = queryToKey(query)
     const values = toRedis(v)
-    redisClient.set(key, values)
+    redisClient.set(key, values, 'EX', QUERY_CACHE_TIMEOUT_S)
   })
 }
 
@@ -88,7 +91,10 @@ function fromRedis(redis_response) {
 }
 
 function queryToKey(query) {
-  return query.filter((_, k) => k !== 'id').hashCode()
+  return QUERY_KEY_PREFIX + query
+    .filter(
+      (_, k) =>
+        k !== 'id' && k !== 'common_parts_matches' && k !== 'electro_grammar'
+    )
+    .hashCode()
 }
-
-module.exports = {}

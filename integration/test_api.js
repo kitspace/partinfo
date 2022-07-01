@@ -8,7 +8,7 @@ const app = require('../src/app')
 describe('from Mpn', () => {
   const test = graphqlTester.tester({
     server: createExpressWrapper(app),
-    url: '/graphql'
+    url: '/graphql',
   })
   it('responds', done => {
     test(`{
@@ -45,7 +45,10 @@ describe('from Mpn', () => {
       assert(response.success, 'response failed')
       assert(response.status === 200, 'status is not 200')
       assert(response.data.part != null, 'part data not returned')
-      assert(response.data.part.mpn.manufacturer != null, 'manufacturer is null')
+      assert(
+        response.data.part.mpn.manufacturer != null,
+        'manufacturer is null'
+      )
       return done()
     })
   })
@@ -82,12 +85,57 @@ describe('from Mpn', () => {
       return done()
     })
   })
+  it('filters offers array', () => {
+    return test(`{
+       part(mpn:{manufacturer:"Texas Instruments" part:"NE555P"}) {
+         offers(from: "Digikey") {
+           sku {
+             vendor
+             part
+           }
+         }
+       }
+    }`).then(response => {
+      assert(response.success, 'response failed')
+      assert(response.status === 200, 'status is not 200')
+      assert(response.data.part != null, 'part data not returned')
+      assert(response.data.part.offers != null, 'offers is null')
+      assert(response.data.part.offers.length > 0, 'offers is empty')
+      response.data.part.offers.forEach(offer => {
+        assert(offer.sku.vendor === 'Digikey', 'not from Digikey')
+      })
+    })
+  })
+  it('filters offers array from multiple', () => {
+    return test(`{
+       part(mpn:{manufacturer:"Texas Instruments" part:"NE555P"}) {
+         offers(from: ["Digikey", "Mouser"]) {
+           sku {
+             vendor
+             part
+           }
+         }
+       }
+    }`).then(response => {
+      assert(response.success, 'response failed')
+      assert(response.status === 200, 'status is not 200')
+      assert(response.data.part != null, 'part data not returned')
+      assert(response.data.part.offers != null, 'offers is null')
+      assert(response.data.part.offers.length > 0, 'offers is empty')
+      const vendors = response.data.part.offers.map(offer => offer.sku.vendor)
+      assert(vendors.includes('Mouser'), 'does not include Mouser')
+      assert(vendors.includes('Digikey'), 'does not include Digikey')
+      vendors.forEach(vendor => {
+        assert(vendor === 'Digikey' || vendor === 'Mouser', 'not from Mouser or Digikey')
+      })
+    })
+  })
 })
 
 describe('from Sku', () => {
   const test = graphqlTester.tester({
     server: createExpressWrapper(app),
-    url: '/graphql'
+    url: '/graphql',
   })
   it('responds', done => {
     test(`{
@@ -140,12 +188,35 @@ describe('from Sku', () => {
       })
     })
   })
+  it("doesn't return offers without the requested sku in it", () => {
+    const vendor = 'Farnell'
+    const part = '1220424'
+    return test(`{
+       part(sku:{vendor: "${vendor}", part:"${part}"}) {
+         offers {
+           sku {
+             vendor
+             part
+           }
+         }
+       }
+    }`).then(response => {
+      assert(response.success, 'response failed')
+      assert(response.status === 200, 'status is not 200')
+      if (response.data.part != null) {
+        const returned_sku = response.data.part.offers.reduce((prev, o) => {
+          return prev || (o.vendor === vendor && o.part === part)
+        }, false)
+        assert(returned_sku, "didn't return sku")
+      }
+    })
+  })
 })
 
 describe('search', () => {
   const test = graphqlTester.tester({
     server: createExpressWrapper(app),
-    url: '/graphql'
+    url: '/graphql',
   })
   it('responds', done => {
     test(`{

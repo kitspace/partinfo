@@ -1,99 +1,108 @@
 const immutable = require('immutable')
-const osmosis = require('osmosis')
 const url = require('url')
+const superagent = require('superagent')
+const rateLimit = require('promise-rate-limit')
+const redis = require('redis')
+const {ELEMENT14_API_KEYS, ELEMENT14_CACHE_TIMEOUT_S} = require('../config')
 
-function element14(name, sku) {
-  return new Promise((resolve, reject) => {
-    let site, currency
-    if (name === 'Newark') {
-      site = 'http://www.newark.com/'
-      currency = 'USD'
-    } else if (name === 'Farnell') {
-      site = 'http://uk.farnell.com/'
-      currency = 'GBP'
-    } else {
-      throw Error(`Only Newark and Farnell supported, got ${name}`)
-    }
-    const sku_url = site + sku
-    osmosis
-      .get(sku_url)
-      .set({
-        image_src: '#productMainImage @src',
-        names: ['dt[id^=descAttributeName]'],
-        values: ['dd[id^=descAttributeValue]'],
-        description: "[itemprop='name']",
-        quantities: ['td.qty @value'],
-        prices: ['td.threeColTd'],
-        foreign_stock: 'span[id^=internalDirectShipTooltip_] !>',
-        not_normally_stocked: 'span[id^=notNormallyStockedTooltip_] !>',
-        stock: '.availabilityHeading',
+const redisClient = redis.createClient()
+
+let key_select = 0
+
+const runQuery = rateLimit(1, 1000, function(sku, site) {
+  const api_key = ELEMENT14_API_KEYS[key_select]
+  key_select = (key_select + 1) % ELEMENT14_API_KEYS.length
+
+  let location, extendedLocation
+  if (site === 'uk.farnell.com') {
+    location = 'UK'
+    extendedLocation = 'US'
+  } else if (site === 'www.newark.com') {
+    location = 'US'
+    extendedLocation = 'UK'
+  } else {
+    throw Error(`Only Newark and Farnell supported, got ${site}`)
+  }
+
+  const url = `https://api.element14.com/catalog/products?callInfo.responseDataFormat=json&term=id%3A${sku}&storeInfo.id=${site}&callInfo.apiKey=${api_key}&resultsSettings.responseGroup=inventory`
+  return superagent
+    .get(url)
+    .set('accept', 'application/json')
+    .then(r => {
+      const products = r.body.premierFarnellPartNumberReturn.products
+      if (products == null || products.length == 0) {
+	      return immutable.Map()
+      }
+      const p = r.body.premierFarnellPartNumberReturn.products[0]
+      const mpn = {
+        manufacturer: p.brandName,
+        part: p.translatedManufacturerPartNumber,
+      }
+      return immutable.fromJS({
+        mpn,
+        in_stock_quantity: p.stock.level,
+        stock_location:
+          p.nationalClassCode === 'F' ? extendedLocation : location,
       })
-      .data(data => {
-        const {
-          image_src,
-          names,
-          values,
-          description,
-          quantities,
-          prices,
-          foreign_stock,
-          not_normally_stocked,
-          stock,
-        } = data
-        const stock_location = foreign_stock
-          ? name === 'Newark' ? 'UK' : 'US'
-          : name === 'Newark' ? 'US' : 'UK'
-        const stock_match = (stock && stock.match(/^(\d|,)+/)) || [0]
-        const stock_number = `${stock_match[0]} (${stock_location})`
-        resolve(
-          immutable.Map({
-            image: immutable.Map({
-              url: image_src && url.resolve(site, image_src),
-              credit_string: name,
-              credit_url: sku_url,
-            }),
-            stock_info: immutable.fromJS([
-              {
-                key: 'stock',
-                name: 'Stock',
-                value: stock_number,
-              },
-            ]),
-            description,
-            specs: immutable
-              .List(names)
-              .zip(values)
-              .map(([name, value]) => immutable.Map({name, value})),
-            prices: immutable.Map({
-              [currency]: immutable
-                .List(quantities)
-                .zip(prices)
-                .map(([qty, price]) =>
-                  immutable.List.of(parseInt(qty), parseFloat(price.slice(1)))
-                ),
-            }),
+    })
+    .catch(e => {
+      if (e && e.response && e.response.text) {
+        const x = JSON.parse(e.response.text)
+        if (
+          x &&
+          x.Fault &&
+          x.Fault.Detail &&
+          x.Fault.Detail.searchException &&
+          x.Fault.Detail.searchException.exceptionCode === '200003'
+        ) {
+          return immutable.Map({
+            no_longer_stocked: true,
           })
-        )
-      })
-      .error(e => {
-        if (e.indexOf('404') > -1) {
-          resolve(
-            immutable.fromJS({
-              stock_info: [
-                {
-                  key: 'stock',
-                  name: 'Stock',
-                  value: 'No longer stocked',
-                },
-              ],
-            })
-          )
-        } else {
-          reject(e)
         }
-      })
-      .done()
+      }
+      throw e
+    })
+    .then(r => {
+      if (r == null) {
+        r = {}
+      }
+      const redisKey = queryToKey({sku, site})
+      redisClient.set(
+        redisKey,
+        JSON.stringify(r),
+        'EX',
+        ELEMENT14_CACHE_TIMEOUT_S
+      )
+      return r
+    })
+})
+
+async function element14(name, sku) {
+  let site
+  if (name === 'Newark') {
+    site = 'www.newark.com'
+  } else if (name === 'Farnell') {
+    site = 'uk.farnell.com'
+  } else {
+    throw Error(`Only Newark and Farnell supported, got ${name}`)
+  }
+  const cached = await new Promise((resolve, reject) => {
+    const redisKey = queryToKey({sku, site})
+    redisClient.get(redisKey, (err, response) => {
+      if (err) {
+        console.error(err)
+      }
+      resolve(response)
+    })
   })
+  if (cached != null) {
+    return immutable.fromJS(JSON.parse(cached))
+  }
+  return runQuery(sku, site)
+}
+
+function queryToKey(query) {
+  return 'element14:' + query.site + '/' + query.sku
 }
 
 module.exports = element14
